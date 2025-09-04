@@ -1,20 +1,732 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#b71c1c" />
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2025년 재산세 계산</title>
+<link rel="manifest" href="./manifest.webmanifest?v=2">
+<meta name="theme-color" content="#2c58ff">
+<style>
+:root{
+  --bg:#ffffff; --card:#f8f9fa; --text:#0b1220; --text-sub:#4b5563;
+  --brand:#2c58ff; --brand-weak:#e8f1ff; --sum-bg:#e8f1ff;
+  --input-bg:#fffbe6; --line:#ddd; --shadow:rgba(0,0,0,.08);
+  --warn:#d92d20; --ok:#1f7a33; --muted:#9aa0a6; --icon:#334155;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;font-size:14.4px;line-height:1.65;}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:radial-gradient(rgba(44,88,255,.06) 1px,transparent 1px);background-size:18px 18px;opacity:.14}
 
-    <title>재산세 계산</title>
+/* AppBar */
+.appbar{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(8px);background:color-mix(in oklab,var(--bg) 88%,#000 12%);border-bottom:1px solid var(--line)}
+.appbar .row{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.brand{display:none !important}
+/* 아이콘(왼쪽), PIN 영역(오른쪽 고정) */
+.app-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto;min-width:0;margin-left:0;margin-right:auto}
+.app-actions .spacer{display:none}
+.icon-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:#000;cursor:pointer;text-decoration:none;font-size:9.6px;font-weight:700;white-space:nowrap}
+.icon-btn:hover{filter:brightness(1.04)}
+.icon-btn.lg{font-size:9.6px;padding:6px 10px}
+.ico-floppy{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px}
+.ico-floppy svg{width:100%;height:100%}
+.ico-floppy .st{fill:none;stroke:var(--icon);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ico-floppy .fill{fill:var(--icon)}
+/* 작은 프린터 아이콘(디스켓 왼쪽) */
+.ico-printer{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
+.ico-printer svg{width:100%;height:100%}
+.ico-printer .st{fill:none;stroke:var(--icon);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Icon badge (optional) */
+.ico-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;border:1px solid var(--line);font-size:12px;line-height:1}
+.ico-badge.green{background:#eaf7ee;border-color:#cfe8d8}
+.ico-badge.red{background:#fdecec;border-color:#f4c6c6}
 
-    <!-- PWA 관련 -->
-    <link rel="manifest" href="./manifest.webmanifest?v=2">
-    <link rel="icon" href="./icon-192-v2.png" sizes="192x192" />
-    <link rel="apple-touch-icon" href="./icon-512-v2.png" />
-  </head>
-  <body>
-    <noscript>이 앱을 실행하려면 자바스크립트를 켜야 합니다.</noscript>
-    <h1>재산세 계산 앱</h1>
-    <p>PWA 아이콘 테스트 페이지입니다.</p>
-  </body>
+/* PIN 우측 정렬 */
+.admin-mini{display:flex;align-items:center;gap:6px;margin-left:auto}
+.pin-label{font-size:10px;color:#6b7280;letter-spacing:.2px}
+.input-pin{width:90px;height:22px;padding:2px 6px;font-size:10px;border:1px solid var(--line);border-radius:8px;background:transparent;color:inherit;text-align:center}
+.btn-ghost-mini{display:inline-flex;align-items:center;gap:4px;padding:3px 5px;border-radius:6px;border:1px solid var(--line);background:transparent;color:#6b7280;font-size:8px;font-weight:700;opacity:.7;cursor:pointer;white-space:nowrap}
+.btn-ghost-mini .ico-mini{font-size:12px;opacity:.5;line-height:1;color:#cbd5e1}
+.btn-ghost-mini:hover{opacity:.9}
+
+/* Layout */
+.wrap{max-width:1100px;margin:20px auto 90px;padding:0 16px}
+.title{font-size:16.8px;font-weight:800;margin:12px 0 4px}
+.subtitle{font-size:12px;color:var(--brand);margin-bottom:14px}
+.subtitle .danger{color:var(--warn);font-weight:700}
+.grid{display:grid;grid-template-columns:1fr;gap:18px}
+@media (min-width:960px){.grid{grid-template-columns:1.2fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:0 4px 12px var(--shadow)}
+.header-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h2{font-size:14.4px;margin:0}
+h2 .unit{font-size:9.6px;font-weight:600;margin-left:6px;vertical-align:middle;color:var(--text-sub)}
+label{display:block;font-size:13.6px;color:var(--text-sub);margin-bottom:6px}
+.label-center{text-align:center}
+
+/* Inputs */
+input[type="text"],input.num,textarea{width:100%;background:#fff;border:1px solid #ccc;color:#000;padding:12px 14px;border-radius:10px;outline:none;font-size:13.6px}
+input.num{text-align:right;background:var(--input-bg)}
+textarea{min-height:120px;resize:vertical}
+input:focus,textarea:focus{border-color:#9db4ff;box-shadow:0 0 0 3px rgba(44,88,255,.15)}
+.center-input{text-align:center !important}
+.block-center{display:block;margin:0 auto}
+.w-105{width:105px !important}
+input::placeholder,textarea::placeholder{color:#9aa0a6}
+#주택수::placeholder{font-size:80%;}
+#공시_현,#공시_전{width:100% !important}
+
+/* Rows */
+.row{display:grid;grid-template-columns:1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.row3.align-end{align-items:end}
+.row3>div{display:flex;flex-direction:column}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.row3:not(.equal3){grid-template-columns:1fr 1fr}}
+
+/* ▶ Top 3 inputs */
+.row3.equal3{grid-template-columns:1fr 1fr 1fr}
+.row3.equal3 label{text-align:center}
+.row3.equal3 input.num{width:100%;height:44px}
+.row3.equal3 .w-105{width:100% !important}
+
+/* Buttons & Switch */
+.switch{display:inline-flex;align-items:center;gap:8px;margin:0}
+.switch input{accent-color:var(--brand);width:20px;height:20px}
+.btn{display:inline-flex;gap:6px;align-items:center;padding:12px 18px;background:var(--brand);border:1px solid var(--brand);color:#fff;border-radius:12px;cursor:pointer;font-weight:700;font-size:15.2px;text-decoration:none;white-space:nowrap}
+.btn:hover{filter:brightness(1.05)}
+.btn .ico{font-size:18px}
+.btn-calc{font-size:12px;white-space:nowrap;padding:8px 13px !important}
+.btn-calc .ico-reg{font-size:9px;line-height:1;display:inline-block;transform:translateY(1px)}
+
+/* 선택입력(더보기) */
+.zr-inline{display:flex;align-items:flex-end;gap:12px;margin-top:6px;flex-wrap:nowrap}
+.zr-toggle{margin:0}
+.zr-toggle summary{cursor:pointer;color:#2c58ff;font-size:16px;display:inline-block;user-select:none;outline:none}
+.zr-box{margin-top:8px}
+
+/* 3등분 */
+.zr-flex3{display:flex;align-items:flex-end;gap:12px;flex-wrap:nowrap}
+.zr-field{flex:0 0 33.333%;min-width:0;display:flex;flex-direction:column}
+.zr-field label{display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;white-space:nowrap}
+.zr-field input{width:90%;height:40px;margin:0;display:block}
+
+/* 안내문(전년 입력 전용) */
+.note-warn{display:block;color:var(--warn);font-size:11.5px;line-height:1.1;margin:0 0 2px 0;white-space:nowrap;transform:scaleX(0.98);transform-origin:left center}
+
+/* 도시과세: 버튼 위 전용 줄 */
+.urban-row{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin-top:6px}
+
+/* Table & boxes */
+.table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.8px;table-layout:fixed}
+.table colgroup col.c1{width:29%}.table colgroup col.c2{width:34%}.table colgroup col.c3{width:37%}
+.table th,.table td{padding:12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.table thead th:first-child{text-align:center}
+.table th:first-child,.table td:first-child{text-align:left}
+.table td.mono{font-weight:800;font-size:13.6px}
+.th-center{text-align:center !important}
+tfoot tr{background:var(--sum-bg);font-weight:900}
+tfoot th.big{font-size:15.2px}
+.sum-amount{font-size:14.4px !important;font-weight:900 !important;line-height:1.2}
+.sum-box{background:#ffffff;border:1px solid #cdd9ff;border-radius:12px;padding:14px 16px;margin:10px 0 12px 0;box-shadow:0 4px 10px rgba(44,88,255,.08);display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
+/* ▶ 합계 라벨: 검정색 & 1단계 크게 */
+.sum-box .label{font-size:13.6px;color:#000;white-space:nowrap;letter-spacing:-0.2px;line-height:1.2;font-weight:700}
+.sum-box .value{font-size:14.4px;font-weight:900}
+
+/* 경감세액 섹션 */
+.relief-section{margin-top:8px}
+.relief-header{display:flex;align-items:baseline;gap:8px}
+/* 제목 스타일 */
+.relief-header h3{margin-top:5px;margin-bottom:0;font-size:13.6px;font-weight:800;color:#000}
+/* 앞의 '※' 제거 */
+.relief-header h3::before{content:"";}
+.relief-header .relief-total{font-size:14.4px;font-weight:900}
+/* ▶ 아이콘박스 */
+.relief-box{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;
+  border:0.5px solid rgba(217,45,32,0.28);border-radius:12px;padding:12px;
+  background:transparent;
+  box-shadow:0 6px 18px rgba(217,45,32,0.12);
+}
+@media (max-width:720px){.relief-box{grid-template-columns:1fr}}
+.relief-item{border:0 !important;background:transparent;padding:6px 8px}
+.relief-item .subtitle{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 0 4px 0;color:#000;text-align:center}
+.relief-item .subtitle .name{font-weight:800;font-size:12.8px}
+.relief-item .amount{font-weight:900;font-size:14px;line-height:1.1;color:#000;text-align:left}
+/* 경감세액 금액 2행(연간/분기별) 표시용 */
+.relief-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.relief-row .label{font-size:11.5px;color:#6b7280;font-weight:600}
+.relief-row .value{font-weight:900;font-size:14px;color:#000}
+
+/* Notes & tips */
+.warn{color:var(--warn);font-size:12px;margin-top:8px;line-height:1.4;text-align:right}
+.warn b{font-weight:700}
+#warnCapNote{display:none!important}
+.info-table td{white-space:normal;overflow:visible;text-overflow:clip}
+.micro{font-size:75%}
+.tiny{font-size:80%}
+.tips details{margin-top:12px}
+.tips summary{cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:normal}
+.tips .ico-info{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:#eef3ff;border:1px solid #cdd9ff;color:#2c58ff;font-size:16px;font-weight:800;line-height:1}
+.tips .small-2{color:#2c58ff;font-size:80%}
+.sub-advice{display:inline-block;color:#d92d20;font-size:85%;margin-left:8px;white-space:nowrap}
+
+/* Inquiry (50%) */
+#section-inquiry{font-size:50%}
+.board-head{display:flex;align-items:flex-end;gap:8px;flex-wrap:nowrap}
+.input-line{flex:1;min-width:0}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:999px;font-size:10px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;white-space:nowrap}
+.post-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px;margin-top:8px;}
+.post-row{display:flex;justify-content:space-between;gap:10px}
+.post-text{white-space:pre-wrap;overflow-wrap:break-word;font-size:12px;}
+.post-meta{font-size:10px;color:#6b7280;white-space:nowrap}
+.post-actions{display:flex;gap:4px;align-items:center;flex-wrap:nowrap;margin-top:6px}
+.btn-mini{display:inline-flex;align-items:center;gap:4px;padding:4px 6px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-size:8px;cursor:pointer;white-space:nowrap}
+.btn-mini:hover{filter:brightness(0.98)}
+.comment{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:6px;margin-top:6px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comment .meta{font-size:10px;color:#6b7280;margin-bottom:2px}
+
+/* Char counter: 왼쪽으로 5% 이동 */
+.char-count{font-size:10px;color:#6b7280;text-align:right;margin-top:4px;position:relative;left:-5%}
+
+/* Tabbar & Toast */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card);border-top:1px solid var(--line)}
+.tabbar .inner{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;gap:10px;justify-content:space-between}
+.tab-item{flex:1;text-align:center;padding:10px 6px;border-radius:12px;cursor:pointer;font-size:10.4px;color:var(--text-sub);user-select:none}
+.tab-item:hover{background:color-mix(in oklab,var(--brand-weak),#fff 30%)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:60;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;pointer-events:auto}
+
+/* Print */
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  html,body{height:auto}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:12pt}
+  .wrap{max-width:none;margin:0;padding:0}
+  .grid{grid-template-columns:1.2fr 1fr;gap:8px}
+  .card,.table,.sum-box{break-inside:avoid;page-break-inside:avoid}
+  .card{box-shadow:none;padding:12px}
+  .sum-box{margin:6px 0;padding:10px}
+  .table{font-size:12pt}
+  .sum-amount{font-size:14pt}
+  .title{font-size:18pt;margin-bottom:6px}
+  .subtitle{font-size:11pt;margin-bottom:8px}
+  .actions,.btn,.btn-lookup,.appbar,.tabbar,.toast{display:none !important}
+  .tips-pay,#section-inquiry{display:none !important}
+}
+
+/* 전용 미세조정 */
+.zr-flex3 .zr-field{flex:0 0 33.333%}
+label[for="자원_과표"]{letter-spacing:-0.3px}
+label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spacing:-0.4px;white-space:nowrap}
+.zr-flex3 .zr-field input{height:40px;width:90%;margin:0;display:block}
+
+/* 버튼 배경 색상(주택공시가격=초록, 지방세법=빨강) */
+.app-actions a[onclick^="openLookupNew"]{
+  background:#eaf7ee;border-color:#cfe8d8;
+}
+.app-actions a[href*="law.go.kr"]{
+  background:#fdecec;border-color:#f4c6c6;
+}
+.app-actions a[onclick^="openLookupNew"]:hover,
+.app-actions a[href*="law.go.kr"]:hover{filter:brightness(1.03);} 
+</style>
+</head>
+<body>
+<header class="appbar">
+  <div class="row">
+    <!-- 브랜드 문구는 숨김 상태 유지 -->
+    <div class="brand">
+      <span class="logo">🏛️</span>
+      <span class="title">2025년 재산세 계산</span>
+    </div>
+
+    <!-- 왼편: 아이콘 박스 3개 -->
+    <div class="app-actions">
+      <a id="btnInstall" class="icon-btn lg" href="javascript:void(0)" style="display:none" title="앱 설치" aria-label="앱 설치">📲 앱 설치</a>
+      <a class="icon-btn lg" href="javascript:void(0)" onclick="openPrint()" title="인쇄(대상: PDF 저장 선택 가능)" aria-label="인쇄 미리보기">
+        <span class="ico-printer" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path class="st" d="M7 8V4h10v4M6 17H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1 2 2h-1M7 14h10v6H7zM17 11h.01"/>
+          </svg>
+        </span>
+        <span class="ico-floppy" aria-hidden="true" style="margin-left:2px">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" class="st"/>
+            <rect x="6" y="5.5" width="9" height="6" class="st"/>
+            <rect x="17" y="6.5" width="3" height="3" class="fill"/>
+            <line x1="6" y1="16.5" x2="18" y2="16.5" class="st"/>
+          </svg>
+        </span>
+      </a>
+      <a class="icon-btn lg" href="javascript:void(0)" onclick="openLookupNew()" title="주택공시가격" aria-label="주택공시가격">
+        <span aria-hidden="true">🔍</span> 주택공시가격
+      </a>
+      <a class="icon-btn lg" target="_blank" href="https://www.law.go.kr/LSW/lsSc.do?query=%EC%A7%80%EB%B0%A9%EC%84%B8%EB%B2%95" rel="noopener">
+        <span aria-hidden="true">🔍</span> 지방세법
+      </a>
+    </div>
+
+    <!-- 오른편: PIN 문구 + 입력박스(우측 정렬), 관리자 전환 버튼 -->
+    <div class="admin-mini">
+      <label for="adminPin" class="pin-label">PIN</label>
+      <input id="adminPin" class="input-pin" type="password" placeholder="****" />
+      <button class="btn-ghost-mini" type="button" onclick="toggleAdmin()" title="관리자 전환" aria-label="관리자 전환">
+        <span class="ico-mini">🔁</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="title">2025년 재산세 계산</div>
+  <div class="subtitle">
+    ※ 공동주택(아파트, 연립, 빌라, 다세대) 전용
+    <span class="danger">단독주택 및 다가구 주택은 세액계산 불가</span>
+    <span class="sub-advice">※ 문의: 부동산 소재지 관할 구청 세무과</span>
+  </div>
+
+  <div class="grid">
+    <!-- 입력 -->
+    <div class="card" id="section-input">
+      <div class="header-row">
+        <h2>1. 공동주택 정보입력<span class="unit">(단위: 원)</span></h2>
+      </div>
+
+      <!-- ▶ 33% 균등폭 & 라벨 중앙정렬 & 동일 높이 -->
+      <div class="row3 equal3 align-end" style="margin-top:10px">
+        <div>
+          <label>2025년 주택공시가격</label>
+          <input id="공시_현" class="num" type="text" inputmode="numeric" placeholder="숫자만 입력">
+        </div>
+        <div>
+          <label>2024년 주택공시가격</label>
+          <input id="공시_전" class="num" type="text" inputmode="numeric" placeholder="숫자만 입력">
+        </div>
+        <div>
+          <label>보유 주택수</label>
+          <input id="주택수" class="num center-input block-center w-105" type="text" inputmode="numeric" placeholder="숫자만 입력">
+        </div>
+      </div>
+
+      <!-- 선택입력 줄 -->
+      <div class="zr-inline">
+        <details class="zr-toggle">
+          <summary>선택입력 (더보기)</summary>
+          <div class="zr-box">
+            <div class="zr-flex3">
+              <div class="zr-field">
+                <label for="자원_과표">지역자원시설세 과세표준</label>
+                <input id="자원_과표" class="num" type="text" inputmode="numeric" placeholder="숫자만 입력">
+              </div>
+              <div class="zr-field">
+                <span class="note-warn">※ 세부담 상한 대상만 입력</span>
+                <label for="전년_재산세액">2024년 재산세액</label>
+                <input id="전년_재산세액" class="num" type="text" inputmode="numeric" placeholder="숫자만 입력">
+              </div>
+              <div class="zr-field">
+                <span class="note-warn">※ 세부담 상한 대상만 입력</span>
+                <label for="전년_도시지역분">2024년 도시지역분</label>
+                <input id="전년_도시지역분" class="num" type="text" inputmode="numeric" placeholder="숫자만 입력">
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- 계산하기 위 전용 줄: 도시지역분 과세 -->
+      <div class="urban-row" aria-label="도시지역분 과세 선택">
+        <div class="switch">
+          <input id="도시과세" type="checkbox" checked>
+          <label for="도시과세">도시지역분 과세</label>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:10px">
+        <div class="left">
+          <button class="btn btn-calc" onclick="calc()"><span class="ico-reg" aria-hidden="true">✍️</span> 계산하기</button>
+        </div>
+        <div class="right" style="display:none"></div>
+      </div>
+
+      <!-- 세액산출 정보 -->
+      <div style="margin-top:10px" class="swap-breakdown">
+        <details open>
+          <summary>세액산출 정보</summary>
+          <table class="table info-table">
+            <tbody>
+              <tr><td>과표상한율 적용 공시가격</td><td class="mono" id="적용공시">-</td></tr>
+              <tr><td>재산세 과세표준</td><td class="mono" id="과표">-</td></tr>
+              <tr><td>적용 세율</td><td class="mono" id="세율구간">-</td></tr>
+              <tr><td>공정시장가액비율</td><td class="mono" id="공정율">-</td></tr>
+              <tr><td>세부담상한율</td><td class="mono" id="세부담상한율">-</td></tr>
+            </tbody>
+          </table>
+        </details>
+      </div>
+    </div>
+
+    <!-- 결과 -->
+    <div class="card" id="section-result">
+      <h2>2. 최종 세액</h2>
+
+      <div class="sum-box" role="status" aria-live="polite">
+        <div><div class="label">연간 합계</div><div class="value" id="sumY_top">-</div></div>
+        <div><div class="label">분기별(7·9월) 세액</div><div class="value" id="sumQ_top">-</div></div>
+      </div>
+
+      <table class="table"><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup>
+        <thead><tr><th class="th-center">세  목</th><th class="mono th-center">총세액</th><th class="mono">분기별(7·9월)세액</th></tr></thead>
+        <tbody id="tb"><tr><td colspan="3" style="text-align:center;color:#555">입력 후 ‘계산하기’를 눌러주세요.</td></tr></tbody>
+        <tfoot><tr><th class="big">합계 세액</th><th class="mono sum-amount" id="sumY">-</th><th class="mono sum-amount" id="sumQ">-</th></tr></tfoot>
+      </table>
+
+      <!-- 경감세액: 합계 세액 테이블 바로 아래 -->
+      <div class="relief-section" id="reliefSection">
+        <div class="relief-header">
+          <h3>경감세액(연간):</h3>
+          <div class="relief-total" id="reliefTotal">-</div>
+        </div>
+        <div class="relief-box">
+          <div class="relief-item">
+            <div class="subtitle"><span class="name">1세대 1주택 세율특례 경감</span></div>
+            <div class="amount">
+              <div class="relief-row"><span class="label">연간</span><span class="value" id="reliefSpecialY">-</span></div>
+            </div>
+          </div>
+          <div class="relief-item">
+            <div class="subtitle"><span class="name">세부담 상한 초과액 경감</span></div>
+            <div class="amount">
+              <div class="relief-row"><span class="label">연간</span><span class="value" id="reliefCapY">-</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 한줄 코멘트 -->
+    <div class="card" id="section-inquiry">
+      <div class="header-row"><h2>3. 한줄 코멘트</h2><div class="char-count header-counter"><span id="코멘트카운트">0</span>/40</div></div>
+      <div class="board-head">
+        <div class="input-line">
+          <input id="코멘트입력" class="input-line" type="text" maxlength="40" placeholder="코멘트를 남겨주세요. (40자 이내)" />
+        </div>
+        <div class="switch">
+          <input id="비공개체크" type="checkbox"><label for="비공개체크">비공개</label>
+        </div>
+        <button class="btn btn-calc" type="button" onclick="createLine()">등록</button>
+      </div>
+      <div id="commentList" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* 유틸 */
+const $=id=>document.getElementById(id);
+const setText=(id,v)=>{const el=$(id); if(el) el.textContent=v;}
+const setHTML=(id,v)=>{const el=$(id); if(el) el.innerHTML=v;}
+const numOf=id=>Number((($(id)?.value)||'0').replace(/,/g,'')||0);
+const floor10=n=>Math.floor(n/10)*10;
+const fmt=n=>(Number.isFinite(n)?floor10(n).toLocaleString('ko-KR')+'원':'-');
+const fmtPct=p=>{const v=Math.round(p*10000)/100;return(Math.abs(v-Math.round(v))<1e-9)?(Math.round(v)+'%'):(v+'%');};
+const fmtPctInt=r=> (Math.round(r*100))+'%';
+function toast(msg){const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);} 
+function jumpTo(id){$(id)?.scrollIntoView({behavior:'smooth',block:'start'});} 
+
+/* 링크 */
+function openLookupNew(){window.open('https://www.realtyprice.kr/notice/town/nfSiteLink.htm','_blank','noopener');}
+
+/* 입력 숫자 콤마 */
+document.addEventListener('input',e=>{
+  if(e.target.classList.contains('num')){
+    let v=e.target.value.replace(/,/g,'').replace(/[^\d]/g,''); // 정수만 허용
+    if(v===''){e.target.value='';return;}
+    e.target.value=v.replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  }
+});
+
+/* 세율/표 */
+const RATE_TABLES={
+  general:[
+    {base:0,rate:0.0010,minus:0},
+    {base:60000000,rate:0.0015,minus:30000},
+    {base:150000000,rate:0.0025,minus:180000},
+    {base:300000000,rate:0.0040,minus:630000}
+  ],
+  special:[
+    {base:0,rate:0.0005,minus:0},
+    {base:60000000,rate:0.0010,minus:30000},
+    {base:150000000,rate:0.0020,minus:180000},
+    {base:300000000,rate:0.0035,minus:630000}
+  ]
+};
+const SIMPLE_THRESHOLD=60000000;
+const SIMPLE_RATE={general:0.0010,special:0.0005};
+const CITY_RATE=0.0014, EDU_RATE=0.20;
+const ZR_TABLE=[{base:0,rate:0.0004,minus:0},{base:6000000,rate:0.0005,minus:600},{base:13000000,rate:0.0006,minus:1900},{base:26000000,rate:0.0008,minus:7100},{base:39000000,rate:0.0010,minus:14900},{base:64000000,rate:0.0012,minus:27700}];
+const USING_LABEL={general:'일반세율',special:'1주택 특례세율'};
+
+/* 규칙 함수 */
+const appliedPublicPrice=(curP,prevP)=>Math.min(prevP+curP*0.05,curP);
+function getCsmar(appliedPublic,homes){
+  if(homes===1){
+    return (appliedPublic<=300_000_000)?0.43:(appliedPublic<=600_000_000)?0.44:0.45;
+  }
+  return 0.60;
+}
+const chooseUsingKey=(curPublic,homes)=>(curPublic>900_000_000)?'general':(homes===1?'special':'general');
+function pickBracket(base,table){let cur=table[0];for(const b of table){if(base>=b.base) cur=b; else break;}return cur;}
+function computeBasicTax(base,usingKey){
+  if(base<=SIMPLE_THRESHOLD){
+    const r=SIMPLE_RATE[usingKey];
+    const y=Math.floor(base*r);
+    return{y,q:Math.floor(y/2),labelMain:USING_LABEL[usingKey]};
+  }
+  const rule=pickBracket(base,RATE_TABLES[usingKey]);
+  const y=Math.floor(base*rule.rate-rule.minus);
+  return{y,q:Math.floor(y/2),labelMain:USING_LABEL[usingKey]};
+}
+const computeCity=base=>{const y=Math.floor(base*CITY_RATE);return{y,q:Math.floor(y/2)};}
+const computeEdu=y_bon=>{const y=Math.floor(y_bon*EDU_RATE);return{y,q:Math.floor(y/2)};}
+function computeZR(zrBase){
+  if(!(zrBase>0)) return{displayY:'<span class="micro">별도계산 필요</span>',displayQ:'<span class="micro">별도계산 필요</span>',addY:0,addQ:0};
+  const rule=pickBracket(zrBase,ZR_TABLE);const rawYear=Math.floor(zrBase*rule.rate-rule.minus);const rawQuarter=Math.floor(rawYear/2);
+  if(rawYear<4000||rawQuarter<2000){const label='<span class="tiny">세액없음(소액)</span>';return{displayY:label,displayQ:label,addY:0,addQ:0};}
+  return{displayY:fmt(rawYear),displayQ:fmt(rawQuarter),addY:rawYear,addQ:rawQuarter};
+}
+/* 세부담상한율 (전년값 입력 시 상한 적용) */
+function getBurdenCapRate(curPublic){
+  if(curPublic>600_000_000) return 1.30;
+  if(curPublic>300_000_000 && curPublic<=600_000_000) return 1.10;
+  return 1.05;
+}
+function updateBreakdown(appliedPublic,base,labelMain,csmar,burdenCap){
+  setText('적용공시',(Math.floor(appliedPublic)).toLocaleString('ko-KR')+'원');
+  setText('과표',base.toLocaleString('ko-KR')+'원');
+  setText('세율구간',labelMain);
+  setText('공정율',fmtPct(csmar));
+  setText('세부담상한율',fmtPctInt(burdenCap));
+}
+
+function calc(){
+  const curP=numOf('공시_현'), prevP=numOf('공시_전');
+  const homes=Number((($('주택수')?.value)||'1').replace(/,/g,''))||1;
+  const urban=$('도시과세')?.checked ?? true;
+
+  // 과표상한 적용 공시가격 / 공정시장가액비율 / 과세표준
+  const applied=appliedPublicPrice(curP,prevP);
+  const csmar=getCsmar(applied,homes);
+  const base=Math.floor(applied*csmar);
+
+  // 기본 세액(상한 적용 전)
+  const usingKey=chooseUsingKey(curP,homes);
+  const basic0=computeBasicTax(base,usingKey); // 본세
+  const city0=urban?computeCity(base):{y:0,q:0}; // 도시지역분
+
+  // 세부담상한율
+  const burdenCap=getBurdenCapRate(curP);
+
+  // 전년 값 기반 상한 적용 (입력된 경우만)
+  const priorBon=numOf('전년_재산세액');
+  const priorCity=numOf('전년_도시지역분');
+
+  // 상한: 전년금액 * 세부담상한율
+  const capBon = (priorBon>0) ? Math.floor(priorBon * burdenCap) : Infinity;
+  const capCity= (priorCity>0) ? Math.floor(priorCity * burdenCap) : Infinity;
+
+  // 본세 상한 적용
+  let y_bon = Math.min(basic0.y, capBon);
+  if (!Number.isFinite(capBon)) y_bon = basic0.y;
+  let q_bon = Math.floor(y_bon/2);
+
+  // 본세 기반 지방교육세 재계산
+  const edu = computeEdu(y_bon);
+
+  // 도시지역분 상한 적용
+  let y_city = Math.min(city0.y, capCity);
+  if (!Number.isFinite(capCity)) y_city = city0.y;
+  let q_city = Math.floor(y_city/2);
+
+  // 지역자원시설세(선택)
+  const zr=computeZR(numOf('자원_과표'));
+
+  // ▶ 경감세액 계산
+  const generalBasic = computeBasicTax(base,'general').y;
+  const specialBasic = computeBasicTax(base,'special').y;
+  const isSpecial = (homes===1) && (curP<=900_000_000);
+  const reliefSpecial = isSpecial ? Math.max(0, generalBasic - specialBasic) : 0;
+
+  // 상한 경감: (본세 상한차감 + 도시지역분 상한차감)
+  const diffBon = Math.max(0, basic0.y - y_bon);
+  const diffCity = Math.max(0, city0.y - y_city);
+  const reliefCap = diffBon + diffCity;
+
+  const reliefTotal = floor10(reliefSpecial) + floor10(reliefCap);
+
+  // 합계(표시값 기준: 각 세목 10원 절사 후 합산)
+  const y_bon_d=floor10(y_bon), y_city_d=floor10(y_city), edu_y_d=floor10(edu.y), zr_y_d=floor10(zr.addY);
+  const q_bon_d=floor10(q_bon), q_city_d=floor10(q_city), edu_q_d=floor10(edu.q), zr_q_d=floor10(zr.addQ);
+  const y_sum=y_bon_d + y_city_d + edu_y_d + zr_y_d;
+  const q_sum=q_bon_d + q_city_d + edu_q_d + zr_q_d;
+
+  // 표
+  const rows=[
+    ['재산세(본세)',fmt(y_bon),fmt(q_bon)],
+    ['도시지역분',fmt(y_city),fmt(q_city)],
+    ['지방교육세',fmt(edu.y),fmt(edu.q)],
+    ['지역자원시설세',zr.displayY,zr.displayQ],
+  ].map(([n,y,q])=>`<tr><td class="th-center">${n}</td><td class="mono">${y}</td><td class="mono">${q}</td></tr>`).join('');
+  setHTML('tb',rows);
+
+  // 합계(요약/하단)
+  setText('sumY',fmt(y_sum)); setText('sumQ',fmt(q_sum));
+  setText('sumY_top',fmt(y_sum)); setText('sumQ_top',fmt(q_sum));
+
+  // 세액산출 정보
+  updateBreakdown(applied,base,basic0.labelMain,csmar,burdenCap);
+
+  // 경감세액 UI 반영
+  setText('reliefTotal', fmt(reliefTotal));
+  setText('reliefSpecialY', fmt(reliefSpecial));
+  setText('reliefCapY', fmt(reliefCap));
+}
+
+/* 인쇄 */
+function openPrint(){calc();window.print();}
+
+/* 초기/이벤트 연결 */
+document.addEventListener('DOMContentLoaded',()=>{
+  ['전년_재산세액','전년_도시지역분'].forEach(id=>{
+    $(id)?.addEventListener('input',()=>{}); // 상한 경감 안내 토글 제거
+  });
+
+  // 코멘트 카운터
+  const ci=$('코멘트입력');
+  if(ci){
+    ci.addEventListener('input',()=>{
+      const MAX=40;
+      if(ci.value.length>MAX){ci.value=ci.value.slice(0,MAX);} 
+      const cnt=$('코멘트카운트'); if(cnt) cnt.textContent=ci.value.length;
+    });
+    const cnt=$('코멘트카운트'); if(cnt) cnt.textContent=ci.value.length||0;
+  }
+});
+
+/* 한줄 코멘트(로컬) */
+const ADMIN_PIN="120410", LS_KEY="jw_comments_v1", UID_KEY="jw_uid_v1";
+function getUID(){let u=localStorage.getItem(UID_KEY);if(!u){u='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem(UID_KEY,u);}return u;}
+const UID=getUID();
+function isAdmin(){return sessionStorage.getItem('jw_admin')==='1';}
+function toggleAdmin(){const input=$('adminPin')?.value||'';if(isAdmin()){sessionStorage.removeItem('jw_admin');toast('관리자 모드 해제');renderCommentList();return;} if(input===ADMIN_PIN){sessionStorage.setItem('jw_admin','1');toast('관리자 모드 활성화');renderCommentList();}else{toast('PIN이 올바르지 않습니다.');}}
+function loadPosts(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]");}catch{return[]}}
+function savePosts(a){localStorage.setItem(LS_KEY,JSON.stringify(a))}
+function nowStr(){const d=new Date(),z=n=>String(n).padStart(2,'0');return`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));}
+
+function createLine(){
+  const raw = ($('코멘트입력')?.value||'').trim();
+  if(!raw){toast('코멘트를 입력하세요.');return;}
+  const s = raw.slice(0,40);
+  const secret = $('비공개체크')?.checked || false;
+  const arr=loadPosts();
+  arr.push({
+    id:'p_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36),
+    text:s,
+    ownerId:UID,
+    createdAt:nowStr(),
+    secret:secret,
+    comments:[]
+  });
+  savePosts(arr);
+  $('코멘트입력').value='';
+  if($('비공개체크')) $('비공개체크').checked=false;
+  const cnt=$('코멘트카운트'); if(cnt) cnt.textContent='0';
+  toast('등록되었습니다.');
+  renderCommentList();
+}
+
+function addComment(postId){
+  if(!isAdmin()){toast('관리자 모드에서만 코멘트 작성 가능');return;}
+  const ta=$('cmt_'+postId);
+  const txt=(ta?.value||'').trim();
+  if(!txt){toast('코멘트를 입력하세요.');return;}
+  const arr=loadPosts();
+  const p=arr.find(x=>x.id===postId);
+  if(!p){toast('글을 찾을 수 없습니다.');return;}
+  p.comments.push({id:'c_'+Math.random().toString(36).slice(2,10),author:'관리자',body:txt,createdAt:nowStr()});
+  savePosts(arr);
+  ta.value='';
+  renderCommentList();
+  toast('코멘트가 저장되었습니다.');
+}
+function deletePost(postId){
+  if(!isAdmin()){toast('관리자만 삭제할 수 있습니다.');return;}
+  const arr=loadPosts().filter(p=>p.id!==postId);
+  savePosts(arr);
+  renderCommentList();
+  toast('삭제했습니다.');
+}
+
+function renderCommentList(){
+  const el=$('commentList');if(!el) return;
+  let posts=loadPosts().sort((a,b)=>a.createdAt<b.createdAt?1:-1);
+  posts=posts.filter(p=> p.secret ? (p.ownerId===UID || isAdmin()) : true);
+  if(posts.length===0){ el.innerHTML=''; return; }
+  el.innerHTML=posts.map(p=>{
+    const secretNote=p.secret?`<span class="badge" style="background:#fdecec;color:#d92d20">비공개</span>`:'';
+    const ownerNote=(p.ownerId===UID&&!isAdmin())?`<span class="badge">내 글</span>`:'';
+    const cmts=(p.comments||[]).map(c=>`<div class="comment"><div class="meta">👩‍💼 ${c.author} · ${c.createdAt}</div>${escapeHTML(c.body)}</div>`).join('');
+    const adminBox=isAdmin()?`
+      <div class="post-actions">
+        <textarea id="cmt_${p.id}" placeholder="관리자 코멘트를 작성하세요." style="width:100%;min-height:72px"></textarea>
+        <div>
+          <button class="btn-mini" type="button" onclick="addComment('${p.id}')">💬 코멘트 등록</button>
+          <button class="btn-mini" type="button" onclick="deletePost('${p.id}')">🗑️ 삭제</button>
+        </div>
+      </div>`:'';
+    return `
+      <div class="post-card">
+        <div class="post-row">
+          <div class="post-text">${escapeHTML(p.text)}</div>
+          <div class="post-meta">${p.createdAt} ${secretNote} ${ownerNote}</div>
+        </div>
+        ${cmts ? `<div class="comment" style="margin-top:6px"><div class="meta">코멘트</div>${cmts}</div>` : ''}
+        ${adminBox}
+      </div>`;
+  }).join('');
+}
+
+// 스토리지 동기화
+window.addEventListener('storage',e=>{if(e.key===LS_KEY){renderCommentList();}});
+
+document.addEventListener('DOMContentLoaded',renderCommentList);
+
+// ========= PWA: Service Worker & Install Prompt =========
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('btnInstall');
+  if (btn) btn.style.display = 'inline-flex';
+});
+document.getElementById('btnInstall')?.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  try {
+    await deferredPrompt.userChoice; // accepted | dismissed
+  } finally {
+    deferredPrompt = null;
+    const btn = document.getElementById('btnInstall');
+    if (btn) btn.style.display = 'none';
+  }
+});
+</script>
+</body>
 </html>
