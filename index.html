@@ -4,8 +4,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>2025년 재산세 계산</title>
-<link rel="manifest" href="./manifest.webmanifest?v=2">
-<meta name="theme-color" content="#2c58ff">
 <style>
 :root{
   --bg:#ffffff; --card:#f8f9fa; --text:#0b1220; --text-sub:#4b5563;
@@ -242,11 +240,10 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
 
     <!-- 왼편: 아이콘 박스 3개 -->
     <div class="app-actions">
-      <a id="btnInstall" class="icon-btn lg" href="javascript:void(0)" style="display:none" title="앱 설치" aria-label="앱 설치">📲 앱 설치</a>
       <a class="icon-btn lg" href="javascript:void(0)" onclick="openPrint()" title="인쇄(대상: PDF 저장 선택 가능)" aria-label="인쇄 미리보기">
         <span class="ico-printer" aria-hidden="true">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path class="st" d="M7 8V4h10v4M6 17H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 1 2 2h-1M7 14h10v6H7zM17 11h.01"/>
+            <path class="st" d="M7 8V4h10v4M6 17H5a 2 2 0 0 1-2-2v-3a 2 2 0 0 1 2-2h14a 2 2 0 0 1 2 2v3a 2 2 0 0 1 2 2h-1M7 14h10v6H7zM17 11h.01"/>
           </svg>
         </span>
         <span class="ico-floppy" aria-hidden="true" style="margin-left:2px">
@@ -282,7 +279,6 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
   <div class="subtitle">
     ※ 공동주택(아파트, 연립, 빌라, 다세대) 전용
     <span class="danger">단독주택 및 다가구 주택은 세액계산 불가</span>
-    <span class="sub-advice">※ 문의: 부동산 소재지 관할 구청 세무과</span>
   </div>
 
   <div class="grid">
@@ -577,7 +573,7 @@ function calc(){
     ['도시지역분',fmt(y_city),fmt(q_city)],
     ['지방교육세',fmt(edu.y),fmt(edu.q)],
     ['지역자원시설세',zr.displayY,zr.displayQ],
-  ].map(([n,y,q])=>`<tr><td class="th-center">${n}</td><td class="mono">${y}</td><td class="mono">${q}</td></tr>`).join('');
+  ].map(([n,y,q])=>`<tr><td class=\"th-center\">${n}</td><td class=\"mono\">${y}</td><td class=\"mono\">${q}</td></tr>`).join('');
   setHTML('tb',rows);
 
   // 합계(요약/하단)
@@ -702,31 +698,6 @@ function renderCommentList(){
 window.addEventListener('storage',e=>{if(e.key===LS_KEY){renderCommentList();}});
 
 document.addEventListener('DOMContentLoaded',renderCommentList);
-
-// ========= PWA: Service Worker & Install Prompt =========
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
-  });
-}
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const btn = document.getElementById('btnInstall');
-  if (btn) btn.style.display = 'inline-flex';
-});
-document.getElementById('btnInstall')?.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  try {
-    await deferredPrompt.userChoice; // accepted | dismissed
-  } finally {
-    deferredPrompt = null;
-    const btn = document.getElementById('btnInstall');
-    if (btn) btn.style.display = 'none';
-  }
-});
 </script>
 </body>
 </html>
