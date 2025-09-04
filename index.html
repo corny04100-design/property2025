@@ -4,6 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>2025년 재산세 계산</title>
+
+<!-- 🔽 PWA: 테마/매니페스트/아이콘 -->
+<meta name="theme-color" content="#b71c1c" />
+<link rel="manifest" href="./manifest.webmanifest?v=2">
+<link rel="icon" href="./icon-192-v2.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="./icon-512-v2.png" />
+
 <style>
 :root{
   --bg:#ffffff; --card:#f8f9fa; --text:#0b1220; --text-sub:#4b5563;
@@ -95,6 +102,10 @@ input::placeholder,textarea::placeholder{color:#9aa0a6}
 .btn .ico{font-size:18px}
 .btn-calc{font-size:12px;white-space:nowrap;padding:8px 13px !important}
 .btn-calc .ico-reg{font-size:9px;line-height:1;display:inline-block;transform:translateY(1px)}
+
+/* 설치 버튼(앱 설치) */
+#install{display:none;padding:8px 12px;border-radius:8px;border:1px solid #b71c1c;background:#b71c1c;color:#fff;font-weight:800;font-size:12px;cursor:pointer}
+@media all and (display-mode: standalone){ #install{ display:none !important; } }
 
 /* 선택입력(더보기) */
 .zr-inline{display:flex;align-items:flex-end;gap:12px;margin-top:6px;flex-wrap:nowrap}
@@ -238,7 +249,7 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
       <span class="title">2025년 재산세 계산</span>
     </div>
 
-    <!-- 왼편: 아이콘 박스 3개 -->
+    <!-- 왼편: 아이콘 박스 3개 + 🔽 앱 설치 버튼 -->
     <div class="app-actions">
       <a class="icon-btn lg" href="javascript:void(0)" onclick="openPrint()" title="인쇄(대상: PDF 저장 선택 가능)" aria-label="인쇄 미리보기">
         <span class="ico-printer" aria-hidden="true">
@@ -261,6 +272,9 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
       <a class="icon-btn lg" target="_blank" href="https://www.law.go.kr/LSW/lsSc.do?query=%EC%A7%80%EB%B0%A9%EC%84%B8%EB%B2%95" rel="noopener">
         <span aria-hidden="true">🔍</span> 지방세법
       </a>
+
+      <!-- 🔽 여기! 앱 설치 버튼 -->
+      <button id="install" type="button">앱 설치</button>
     </div>
 
     <!-- 오른편: PIN 문구 + 입력박스(우측 정렬), 관리자 전환 버튼 -->
@@ -698,6 +712,52 @@ function renderCommentList(){
 window.addEventListener('storage',e=>{if(e.key===LS_KEY){renderCommentList();}});
 
 document.addEventListener('DOMContentLoaded',renderCommentList);
+
+/* 🔽🔽🔽 PWA: 서비스워커 등록 + 설치 버튼 로직 🔽🔽🔽 */
+(function(){
+  // 1) 서비스워커 등록
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+  }
+
+  // 2) beforeinstallprompt 로 설치 버튼 제어 (Android/Chrome 등)
+  let deferredPrompt;
+  const btn = document.getElementById('install');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();            // 기본 미니바 배너 막기
+    deferredPrompt = e;
+    if (btn) btn.style.display = 'inline-block';
+  });
+
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      btn.disabled = true;
+      deferredPrompt.prompt();     // 설치 다이얼로그
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      btn.style.display = 'none';
+      console.log('install outcome:', outcome);
+    });
+  }
+
+  // 3) 이미 설치된 경우 버튼 숨김
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+  if (isStandalone && btn) btn.style.display = 'none';
+
+  // 4) iOS 안내 배너(선택)
+  const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
+  if (isIOS && isSafari && !isStandalone) {
+    const tip = document.createElement('div');
+    tip.style.cssText = 'margin-left:8px;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:12px;background:#fff';
+    tip.innerHTML = 'iOS는 <b>공유</b> → <b>홈 화면에 추가</b>로 설치하세요.';
+    const actions = document.querySelector('.app-actions');
+    actions && actions.appendChild(tip);
+  }
+})();
 </script>
 </body>
 </html>
