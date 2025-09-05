@@ -259,6 +259,8 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
 }
 .app-actions a[onclick^="openLookupNew"]:hover,
 .app-actions a[href*="law.go.kr"]:hover{filter:brightness(1.03);} 
+/* 🔒 V3 공개 정책: 비공개 스위치 숨김 */
+#section-inquiry .switch{display:none !important}
 </style>
 </head>
 <body>
@@ -777,11 +779,12 @@ function renderCommentList(){
 
 <!-- 🔥 Firebase 연결 스니펫 (CDN / 모듈형, v12.2.1) : 이 스크립트를 페이지 맨 아래에 둬서 위 함수들을 덮어씁니다. -->
 <script type="module">
+  // Firebase SDK (v12.2.1) - 공개 코멘트 + 관리자 수정/삭제(V3)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-  // ✅ Firebase 구성 (사용자 제공 값)
+  // 🔧 구성값 (사용자 제공값 그대로)
   const firebaseConfig = {
     apiKey: "AIzaSyDx2-rk1FBsRIbXhEVz2GCxp-N_5v6v9uo",
     authDomain: "propertytax-2025.firebaseapp.com",
@@ -796,87 +799,121 @@ function renderCommentList(){
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // 익명 로그인 → 완료 후 실시간 구독 시작
-  signInAnonymously(auth).catch(console.error);
+  // ✅ 관리자 이메일 화이트리스트 (반드시 실제 관리자 이메일로 교체!)
+  const ADMIN_EMAILS = [
+    "admin@example.com"
+  ];
 
-  let READY = false;
-  let unsubscribe = null;
-  let CURRENT_USER = null;
+  const $ = (id) => document.getElementById(id);
+  function toast(msg){const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);} 
+  function escapeHTML(s){return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[m]));}
 
-  onAuthStateChanged(auth, (user) => {
-    READY = !!user;
-    CURRENT_USER = user || null;
-    if (!READY) return;
+  // 기본: 비로그인 사용자도 페이지는 보되, 쓰기를 위해 익명 로그인 시도
+  signInAnonymously(auth).catch(()=>{});
 
-    // Firestore 실시간 목록 렌더(V2: 비공개/내 글 표시)
-    window.renderCommentList = function renderCommentList() {
-      const el = document.getElementById('commentList');
-      if (!el) return;
-      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-      const q = query(collection(db, 'comments'), orderBy('createdAt', 'desc'));
-      unsubscribe = onSnapshot(q, (snap) => {
-        const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        if (!posts.length) { el.innerHTML = ''; return; }
-        const html = posts.map(p => {
-          const ts = p.createdAt?.seconds ? new Date(p.createdAt.seconds * 1000) : new Date();
-          const z = n => String(n).padStart(2, '0');
-          const createdAt = `${ts.getFullYear()}-${z(ts.getMonth()+1)}-${z(ts.getDate())} ${z(ts.getHours())}:${z(ts.getMinutes())}`;
-          const secretNote = p.secret ? `<span class="badge" style="background:#fdecec;color:#d92d20">비공개</span>` : '';
-          const ownerNote = (CURRENT_USER && p.ownerUid === CURRENT_USER.uid) ? `<span class="badge">내 글</span>` : '';
-          return `
-            <div class=\"post-card\">
-              <div class=\"post-row\">
-                <div class=\"post-text\">${escapeHTML(p.text || '')}</div>
-                <div class=\"post-meta\">${createdAt} ${secretNote} ${ownerNote}</div>
-              </div>
-            </div>`;
-        }).join('');
-        el.innerHTML = html;
-      });
-    };
+  let READY=false, unsubscribe=null, CURRENT_USER=null, IS_ADMIN=false;
+  const isAdminUser = (user)=> !!(user?.email) && ADMIN_EMAILS.includes(user.email);
 
-    // 코멘트 등록(V2: 비공개/소유자 저장)
-    window.createLine = async function createLine() {
-      try {
-        if (!READY) { toast('잠시 후 다시 시도하세요. (로그인 준비 중)'); return; }
-        const input = document.getElementById('코멘트입력');
-        const secretChk = document.getElementById('비공개체크');
-        const raw = (input?.value || '').trim();
-        if (!raw) { toast('코멘트를 입력하세요.'); return; }
-        const text = raw.slice(0, 40);
-        const secret = !!(secretChk?.checked);
+  function updateAdminUI(){
+    const pinLabel=document.querySelector('.pin-label');
+    if(pinLabel) pinLabel.textContent = IS_ADMIN ? 'ADMIN' : 'PIN';
+  }
 
-        await addDoc(collection(db, 'comments'), {
-          text,
-          secret,
-          ownerUid: CURRENT_USER?.uid || null,
-          createdAt: serverTimestamp()
-        });
-
-        if (input) input.value = '';
-        if (secretChk) secretChk.checked = false;
-        const cnt = document.getElementById('코멘트카운트');
-        if (cnt) cnt.textContent = '0';
-        toast('등록되었습니다.');
-      } catch (e) {
-        console.error('[createLine] 실패:', e);
-        // 친절한 오류 메시지
-        const code = e?.code || '';
-        if (code.includes('permission') || code.includes('denied')) {
-          toast('등록 실패: Firestore 규칙 때문에 거부됨 (permission-denied). 규칙을 완화 후 재시도하세요.');
-        } else if (code.includes('auth')) {
-          toast('등록 실패: 인증 문제. 익명 로그인(Authorized domains 포함) 상태를 확인하세요.');
-        } else if (code.includes('unavailable') || code.includes('network')) {
-          toast('등록 실패: 네트워크/서버 일시 문제. 새로고침 후 다시 시도하세요.');
-        } else {
-          toast('등록 실패: ' + (e?.message || '알 수 없는 오류'));
-        }
-      }
-    };
-
-    // 최초 1회 렌더(실시간 구독 시작)
-    window.renderCommentList();
+  onAuthStateChanged(auth, (user)=>{
+    READY=!!user; CURRENT_USER=user||null; IS_ADMIN=isAdminUser(CURRENT_USER);
+    updateAdminUI();
+    if (typeof window.renderCommentList === 'function') {
+      window.renderCommentList();
+    }
   });
+
+  // 🔐 관리자 로그인/로그아웃 (상단 🔁 버튼에 연결)
+  window.toggleAdmin = async function toggleAdmin(){
+    try{
+      if(IS_ADMIN){ await signOut(auth); toast('관리자 로그아웃'); return; }
+      const email = prompt('관리자 이메일');
+      const pw    = prompt('비밀번호');
+      if(!email || !pw){ toast('이메일/비밀번호가 필요합니다.'); return; }
+      await signInWithEmailAndPassword(auth, email, pw);
+      toast('관리자 로그인 성공');
+    }catch(e){ console.error('[admin login]', e); toast('로그인 실패: ' + (e?.code||e?.message||'오류')); }
+  }
+
+  // 📝 등록: 전면 공개(비공개 옵션 제거)
+  window.createLine = async function createLine(){
+    try{
+      if(!READY){ toast('잠시 후 다시 시도하세요. (로그인 준비 중)'); return; }
+      const input=$('코멘트입력');
+      const raw=(input?.value||'').trim();
+      if(!raw){ toast('코멘트를 입력하세요.'); return; }
+      const text=raw.slice(0,40);
+      await addDoc(collection(db,'comments'), { text, createdAt: serverTimestamp() });
+      if(input) input.value=''; const cnt=$('코멘트카운트'); if(cnt) cnt.textContent='0';
+      toast('등록되었습니다.');
+    }catch(e){
+      console.error('[createLine] 실패:', e);
+      const code=e?.code||'';
+      if(code.includes('permission')||code.includes('denied')) toast('등록 실패: Firestore 규칙 거부(permission-denied)');
+      else if(code.includes('auth')) toast('등록 실패: 인증 문제. 익명 로그인/도메인 허용 확인');
+      else if(code.includes('unavailable')||code.includes('network')) toast('등록 실패: 네트워크/서버 문제');
+      else toast('등록 실패: '+(e?.message||'알 수 없는 오류'));
+    }
+  }
+
+  // 📜 목록: 모두에게 공개, 관리자에겐 수정/삭제 UI 제공
+  window.renderCommentList = function renderCommentList(){
+    const el=$('commentList'); if(!el) return;
+    if(unsubscribe){ unsubscribe(); unsubscribe=null; }
+    const q = query(collection(db,'comments'), orderBy('createdAt','desc'));
+    unsubscribe = onSnapshot(q, (snap)=>{
+      const posts=snap.docs.map(d=>({id:d.id, ...d.data()}));
+      if(!posts.length){ el.innerHTML=''; return; }
+      const html=posts.map(p=>{
+        const ts=p.createdAt?.seconds?new Date(p.createdAt.seconds*1000):new Date();
+        const z=n=>String(n).padStart(2,'0');
+        const createdAt=`${ts.getFullYear()}-${z(ts.getMonth()+1)}-${z(ts.getDate())} ${z(ts.getHours())}:${z(ts.getMinutes())}`;
+        const adminBox = IS_ADMIN ? `
+          <div class=\"post-actions\">
+            <textarea id=\"edit_${p.id}\" style=\"width:100%;min-height:72px\">${escapeHTML(p.text||'')}</textarea>
+            <div>
+              <button class=\"btn-mini\" type=\"button\" onclick=\"updatePost('${p.id}')\">✏️ 수정</button>
+              <button class=\"btn-mini\" type=\"button\" onclick=\"deletePostDb('${p.id}')\">🗑️ 삭제</button>
+            </div>
+          </div>` : '';
+        return `
+          <div class=\"post-card\">
+            <div class=\"post-row\">
+              <div class=\"post-text\">${escapeHTML(p.text||'')}</div>
+              <div class=\"post-meta\">${createdAt}</div>
+            </div>
+            ${adminBox}
+          </div>`;
+      }).join('');
+      el.innerHTML=html;
+    });
+  }
+
+  // ✏️ 수정
+  window.updatePost = async function updatePost(postId){
+    try{
+      if(!IS_ADMIN){ toast('관리자만 수정할 수 있습니다.'); return; }
+      const ta=$('edit_'+postId);
+      const text=(ta?.value||'').trim().slice(0,40);
+      if(!text){ toast('내용을 입력하세요.'); return; }
+      await updateDoc(doc(db,'comments',postId), { text, updatedAt: serverTimestamp() });
+      toast('수정되었습니다.');
+    }catch(e){ console.error('[updatePost]',e); toast('수정 실패: '+(e?.code||e?.message||'오류')); }
+  }
+
+  // 🗑️ 삭제
+  window.deletePostDb = async function deletePostDb(postId){
+    try{
+      if(!IS_ADMIN){ toast('관리자만 삭제할 수 있습니다.'); return; }
+      if(!confirm('삭제할까요?')) return;
+      await deleteDoc(doc(db,'comments',postId));
+      toast('삭제했습니다.');
+    }catch(e){ console.error('[deletePostDb]',e); toast('삭제 실패: '+(e?.code||e?.message||'오류')); }
+  }
 </script>
 </body>
 </html>
