@@ -1,10 +1,10 @@
 // 간단한 PWA 캐시 서비스워커
 // 배포할 때마다 CACHE_VERSION 숫자를 바꿔주면 캐시가 갱신됩니다.
-const CACHE_VERSION = 'pwa-cache-v4';
+const CACHE_VERSION = 'pwa-cache-v5';
 const CACHE_FILES = [
   './',
   './index.html',
-  './manifest.webmanifest?v=4',
+  './manifest.webmanifest?v=5',
   './icon-192-v2.png',
   './icon-512-v2.png'
 ];
