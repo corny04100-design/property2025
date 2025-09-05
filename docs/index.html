@@ -57,7 +57,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
 /* Layout */
 .wrap{max-width:1100px;margin:20px auto 90px;padding:0 16px}
 .title{font-size:16.8px;font-weight:800;margin:12px 0 4px}
-.subtitle{font-size:12px;color:var(--brand);margin-bottom:14px}
+.subtitle{font-size:12px;color:#2c58ff;margin-bottom:14px}
 .subtitle .danger{color:var(--warn);font-weight:700}
 .grid{display:grid;grid-template-columns:1fr;gap:18px}
 @media (min-width:960px){.grid{grid-template-columns:1.2fr 1fr}}
@@ -170,17 +170,17 @@ tfoot th.big{font-size:15.2px}
 .relief-box.compact .subtitle .name{
   font-size:12px;
   font-weight:700;
-  white-space:nowrap;      /* 줄바꿈 없음 */
-  letter-spacing:-0.5px;   /* 글자 간격 좁힘 */
-  color:#000 !important;   /* ▶ 제목 글자색: 검정 */
+  white-space:nowrap;
+  letter-spacing:-0.5px;
+  color:#000 !important;
 }
 .relief-box.compact .amount.inline{
   font-size:14px;
   font-weight:900;
   margin-top:2px;
-  white-space:nowrap;      /* 줄바꿈 없음 */
+  white-space:nowrap;
   line-height:1.2;
-  color:#000 !important;   /* ▶ 금액 글자색: 검정 */
+  color:#000 !important;
 }
 
 @media (max-width:720px){
@@ -259,6 +259,7 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
 }
 .app-actions a[onclick^="openLookupNew"]:hover,
 .app-actions a[href*="law.go.kr"]:hover{filter:brightness(1.03);} 
+
 /* 🔒 V3 공개 정책: 비공개 스위치 숨김 */
 #section-inquiry .switch{display:none !important}
 </style>
@@ -643,148 +644,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 });
 
-// 스토리지 동기화
-window.addEventListener('storage',e=>{if(e.key===LS_KEY){renderCommentList();}});
-
-/* 한줄 코멘트(로컬) — V1에서 Firestore로 덮어쓸 예정 */
-const ADMIN_PIN="120410", LS_KEY="jw_comments_v1", UID_KEY="jw_uid_v1";
-function getUID(){let u=localStorage.getItem(UID_KEY);if(!u){u='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem(UID_KEY,u);}return u;}
-const UID=getUID();
-function isAdmin(){return sessionStorage.getItem('jw_admin')==='1';}
-function toggleAdmin(){const input=$('adminPin')?.value||'';if(isAdmin()){sessionStorage.removeItem('jw_admin');toast('관리자 모드 해제');renderCommentList();return;} if(input===ADMIN_PIN){sessionStorage.setItem('jw_admin','1');toast('관리자 모드 활성화');renderCommentList();}else{toast('PIN이 올바르지 않습니다.');}}
-function loadPosts(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]");}catch{return[]}}
-function savePosts(a){localStorage.setItem(LS_KEY,JSON.stringify(a))}
-function nowStr(){const d=new Date(),z=n=>String(n).padStart(2,'0');return`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;}
-function escapeHTML(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&quot;','\'':'&#39;'}[m]));}
-
-function createLine(){
-  const raw = ($('코멘트입력')?.value||'').trim();
-  if(!raw){toast('코멘트를 입력하세요.');return;}
-  const s = raw.slice(0,40);
-  const secret = $('비공개체크')?.checked || false;
-  const arr=loadPosts();
-  arr.push({
-    id:'p_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36),
-    text:s,
-    ownerId:UID,
-    createdAt:nowStr(),
-    secret:secret,
-    comments:[]
-  });
-  savePosts(arr);
-  $('코멘트입력').value='';
-  if($('비공개체크')) $('비공개체크').checked=false;
-  const cnt=$('코멘트카운트'); if(cnt) cnt.textContent='0';
-  toast('등록되었습니다.');
-  renderCommentList();
-}
-
-function addComment(postId){
-  if(!isAdmin()){toast('관리자 모드에서만 코멘트 작성 가능');return;}
-  const ta=$('cmt_'+postId);
-  const txt=(ta?.value||'').trim();
-  if(!txt){toast('코멘트를 입력하세요.');return;}
-  const arr=loadPosts();
-  const p=arr.find(x=>x.id===postId);
-  if(!p){toast('글을 찾을 수 없습니다.');return;}
-  p.comments.push({id:'c_'+Math.random().toString(36).slice(2,10),author:'관리자',body:txt,createdAt:nowStr()});
-  savePosts(arr);
-  ta.value='';
-  renderCommentList();
-  toast('코멘트가 저장되었습니다.');
-}
-function deletePost(postId){
-  if(!isAdmin()){toast('관리자만 삭제할 수 있습니다.');return;}
-  const arr=loadPosts().filter(p=>p.id!==postId);
-  savePosts(arr);
-  renderCommentList();
-  toast('삭제했습니다.');
-}
-
-function renderCommentList(){
-  const el=$('commentList');if(!el) return;
-  let posts=loadPosts().sort((a,b)=>a.createdAt<b.createdAt?1:-1);
-  posts=posts.filter(p=> p.secret ? (p.ownerId===UID || isAdmin()) : true);
-  if(posts.length===0){ el.innerHTML=''; return; }
-  el.innerHTML=posts.map(p=>{
-    const secretNote=p.secret?`<span class="badge" style="background:#fdecec;color:#d92d20">비공개</span>`:'';
-    const ownerNote=(p.ownerId===UID&&!isAdmin())?`<span class="badge">내 글</span>`:'';
-    const cmts=(p.comments||[]).map(c=>`<div class="comment"><div class="meta">👩‍💼 ${c.author} · ${c.createdAt}</div>${escapeHTML(c.body)}</div>`).join('');
-    const adminBox=isAdmin()?`
-      <div class="post-actions">
-        <textarea id="cmt_${p.id}" placeholder="관리자 코멘트를 작성하세요." style="width:100%;min-height:72px"></textarea>
-        <div>
-          <button class="btn-mini" type="button" onclick="addComment('${p.id}')">💬 코멘트 등록</button>
-          <button class="btn-mini" type="button" onclick="deletePost('${p.id}')">🗑️ 삭제</button>
-        </div>
-      </div>`:'';
-    return `
-      <div class="post-card">
-        <div class="post-row">
-          <div class="post-text">${escapeHTML(p.text)}</div>
-          <div class="post-meta">${p.createdAt} ${secretNote} ${ownerNote}</div>
-        </div>
-        ${cmts ? `<div class="comment" style="margin-top:6px"><div class="meta">코멘트</div>${cmts}</div>` : ''}
-        ${adminBox}
-      </div>`;
-  }).join('');
-}
-
-/* 🔽🔽🔽 PWA: 서비스워커 등록 + 설치 버튼 로직 🔽🔽🔽 */
-(function(){
-  // 1) 서비스워커 등록
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
-  }
-
-  // 2) beforeinstallprompt 로 설치 버튼 제어 (Android/Chrome 등)
-  let deferredPrompt;
-  const btn = document.getElementById('install');
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();            // 기본 미니바 배너 막기
-    deferredPrompt = e;
-    if (btn) btn.style.display = 'inline-block';
-  });
-
-  if (btn) {
-    btn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      btn.disabled = true;
-      deferredPrompt.prompt();     // 설치 다이얼로그
-      const { outcome } = await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      btn.style.display = 'none';
-      console.log('install outcome:', outcome);
-    });
-  }
-
-  // 3) 이미 설치된 경우 버튼 숨김
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                    || window.navigator.standalone === true;
-  if (isStandalone && btn) btn.style.display = 'none';
-
-  // 4) iOS 안내 배너(선택)
-  const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(window.navigator.userAgent);
-  if (isIOS && isSafari && !isStandalone) {
-    const tip = document.createElement('div');
-    tip.style.cssText = 'margin-left:8px;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:12px;background:#fff';
-    tip.innerHTML = 'iOS는 <b>공유</b> → <b>홈 화면에 추가</b>로 설치하세요.';
-    const actions = document.querySelector('.app-actions');
-    actions && actions.appendChild(tip);
-  }
-})();
+// (V1 잔존 로컬 코드: Firebase가 아래에서 덮어씁니다)
 </script>
 
-<!-- 🔥 Firebase 연결 스니펫 (CDN / 모듈형, v12.2.1) : 이 스크립트를 페이지 맨 아래에 둬서 위 함수들을 덮어씁니다. -->
+<!-- 🔥 Firebase 연결 스니펫 (CDN / 모듈형, v12.2.1) -->
 <script type="module">
-  // Firebase SDK (v12.2.1) - 공개 코멘트 + 관리자 수정/삭제(V3)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
   import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
   import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-  // 🔧 구성값 (사용자 제공값 그대로)
+  // 🔧 Firebase 설정
   const firebaseConfig = {
     apiKey: "AIzaSyDx2-rk1FBsRIbXhEVz2GCxp-N_5v6v9uo",
     authDomain: "propertytax-2025.firebaseapp.com",
@@ -799,20 +668,18 @@ function renderCommentList(){
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // ✅ 관리자 이메일 화이트리스트 (반드시 실제 관리자 이메일로 교체!)
-  const ADMIN_EMAILS = [
-    "admin@example.com"
-  ];
+  // ✅ ⬇️ 여기 교체(소문자 비교)
+  const ADMIN_EMAILS = ["kor7@kakao.com"].map(s => s.toLowerCase());
+  const isAdminUser = (user) => !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
 
   const $ = (id) => document.getElementById(id);
   function toast(msg){const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);} 
-  function escapeHTML(s){return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[m]));}
+  function escapeHTML(s){return String(s).replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\\'':'&#39;','\"':'&quot;'}[m]));}
 
-  // 기본: 비로그인 사용자도 페이지는 보되, 쓰기를 위해 익명 로그인 시도
+  // 비로그인 사용자는 자동 익명 로그인 시도
   signInAnonymously(auth).catch(()=>{});
 
   let READY=false, unsubscribe=null, CURRENT_USER=null, IS_ADMIN=false;
-  const isAdminUser = (user)=> !!(user?.email) && ADMIN_EMAILS.includes(user.email);
 
   function updateAdminUI(){
     const pinLabel=document.querySelector('.pin-label');
@@ -827,7 +694,7 @@ function renderCommentList(){
     }
   });
 
-  // 🔐 관리자 로그인/로그아웃 (상단 🔁 버튼에 연결)
+  // 🔐 관리자 로그인/로그아웃 (상단 🔁 버튼)
   window.toggleAdmin = async function toggleAdmin(){
     try{
       if(IS_ADMIN){ await signOut(auth); toast('관리자 로그아웃'); return; }
@@ -835,11 +702,15 @@ function renderCommentList(){
       const pw    = prompt('비밀번호');
       if(!email || !pw){ toast('이메일/비밀번호가 필요합니다.'); return; }
       await signInWithEmailAndPassword(auth, email, pw);
+      // 로그인 직후 즉시 반영
+      IS_ADMIN = isAdminUser(auth.currentUser);
+      updateAdminUI();
+      window.renderCommentList?.();
       toast('관리자 로그인 성공');
     }catch(e){ console.error('[admin login]', e); toast('로그인 실패: ' + (e?.code||e?.message||'오류')); }
   }
 
-  // 📝 등록: 전면 공개(비공개 옵션 제거)
+  // 📝 등록: 전면 공개
   window.createLine = async function createLine(){
     try{
       if(!READY){ toast('잠시 후 다시 시도하세요. (로그인 준비 중)'); return; }
@@ -860,7 +731,7 @@ function renderCommentList(){
     }
   }
 
-  // 📜 목록: 모두에게 공개, 관리자에겐 수정/삭제 UI 제공
+  // 📜 목록: 모두 공개, 관리자에겐 수정/삭제 UI 표시
   window.renderCommentList = function renderCommentList(){
     const el=$('commentList'); if(!el) return;
     if(unsubscribe){ unsubscribe(); unsubscribe=null; }
@@ -873,18 +744,18 @@ function renderCommentList(){
         const z=n=>String(n).padStart(2,'0');
         const createdAt=`${ts.getFullYear()}-${z(ts.getMonth()+1)}-${z(ts.getDate())} ${z(ts.getHours())}:${z(ts.getMinutes())}`;
         const adminBox = IS_ADMIN ? `
-          <div class=\"post-actions\">
-            <textarea id=\"edit_${p.id}\" style=\"width:100%;min-height:72px\">${escapeHTML(p.text||'')}</textarea>
+          <div class="post-actions">
+            <textarea id="edit_${p.id}" style="width:100%;min-height:72px">${escapeHTML(p.text||'')}</textarea>
             <div>
-              <button class=\"btn-mini\" type=\"button\" onclick=\"updatePost('${p.id}')\">✏️ 수정</button>
-              <button class=\"btn-mini\" type=\"button\" onclick=\"deletePostDb('${p.id}')\">🗑️ 삭제</button>
+              <button class="btn-mini" type="button" onclick="updatePost('${p.id}')">✏️ 수정</button>
+              <button class="btn-mini" type="button" onclick="deletePostDb('${p.id}')">🗑️ 삭제</button>
             </div>
           </div>` : '';
         return `
-          <div class=\"post-card\">
-            <div class=\"post-row\">
-              <div class=\"post-text\">${escapeHTML(p.text||'')}</div>
-              <div class=\"post-meta\">${createdAt}</div>
+          <div class="post-card">
+            <div class="post-row">
+              <div class="post-text">${escapeHTML(p.text||'')}</div>
+              <div class="post-meta">${createdAt}</div>
             </div>
             ${adminBox}
           </div>`;
@@ -914,6 +785,31 @@ function renderCommentList(){
       toast('삭제했습니다.');
     }catch(e){ console.error('[deletePostDb]',e); toast('삭제 실패: '+(e?.code||e?.message||'오류')); }
   }
+</script>
+
+<!-- PWA: 서비스워커/설치 버튼 로직 (선택) -->
+<script>
+(function(){
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+  }
+  let deferredPrompt;
+  const btn = document.getElementById('install');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e; if (btn) btn.style.display = 'inline-block';
+  });
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      btn.disabled = true;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null; btn.style.display = 'none';
+    });
+  }
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone && btn) btn.style.display = 'none';
+})();
 </script>
 </body>
 </html>
