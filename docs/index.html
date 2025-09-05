@@ -141,30 +141,49 @@ tfoot th.big{font-size:15.2px}
 .sum-box .label{font-size:13.6px;color:#000;white-space:nowrap;letter-spacing:-0.2px;line-height:1.2;font-weight:700}
 .sum-box .value{font-size:14.4px;font-weight:900}
 
-/* 경감세액 섹션 */
+/* 경감세액 섹션 - compact 레이아웃 */
 .relief-section{margin-top:8px}
 .relief-header{display:flex;align-items:baseline;gap:8px}
-/* 제목 스타일 */
 .relief-header h3{margin-top:5px;margin-bottom:0;font-size:13.6px;font-weight:800;color:#000}
-/* 앞의 '※' 제거 */
 .relief-header h3::before{content:"";}
 .relief-header .relief-total{font-size:14.4px;font-weight:900}
-/* ▶ 아이콘박스 */
+
 .relief-box{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;
-  border:0.5px solid rgba(217,45,32,0.28);border-radius:12px;padding:12px;
-  background:transparent;
+  border:0.5px solid rgba(217,45,32,0.28);
+  border-radius:12px;
+  padding:10px;
   box-shadow:0 6px 18px rgba(217,45,32,0.12);
+  background:transparent;
 }
-@media (max-width:720px){.relief-box{grid-template-columns:1fr}}
-.relief-item{border:0 !important;background:transparent;padding:6px 8px}
-.relief-item .subtitle{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 0 4px 0;color:#000;text-align:center}
-.relief-item .subtitle .name{font-weight:800;font-size:12.8px}
-.relief-item .amount{font-weight:900;font-size:14px;line-height:1.1;color:#000;text-align:left}
-/* 경감세액 금액 2행(연간/분기별) 표시용 */
-.relief-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.relief-row .label{font-size:11.5px;color:#6b7280;font-weight:600}
-.relief-row .value{font-weight:900;font-size:14px;color:#000}
+/* ✅ 변경: 최대폭 90% (기존 60%에서 약 50% 확대) */
+.relief-box.compact{
+  max-width:90%;
+  display:flex;
+  gap:12px;
+  justify-content:space-between;
+}
+.relief-box.compact .relief-item{
+  flex:1;
+  text-align:center;
+  padding:4px 6px;
+}
+.relief-box.compact .subtitle .name{
+  font-size:12px;
+  font-weight:700;
+  white-space:nowrap;      /* 줄바꿈 없음 */
+  letter-spacing:-0.5px;   /* 글자 간격 좁힘 */
+}
+.relief-box.compact .amount.inline{
+  font-size:14px;
+  font-weight:900;
+  margin-top:2px;
+  white-space:nowrap;      /* 줄바꿈 없음 */
+  line-height:1.2;
+}
+
+@media (max-width:720px){
+  .relief-box.compact{max-width:100%;}
+}
 
 /* Notes & tips */
 .warn{color:var(--warn);font-size:12px;margin-top:8px;line-height:1.4;text-align:right}
@@ -390,24 +409,20 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
         <tfoot><tr><th class="big">합계 세액</th><th class="mono sum-amount" id="sumY">-</th><th class="mono sum-amount" id="sumQ">-</th></tr></tfoot>
       </table>
 
-      <!-- 경감세액: 합계 세액 테이블 바로 아래 -->
+      <!-- ✅ 경감세액: 요청 레이아웃 반영 -->
       <div class="relief-section" id="reliefSection">
         <div class="relief-header">
           <h3>경감세액(연간):</h3>
           <div class="relief-total" id="reliefTotal">-</div>
         </div>
-        <div class="relief-box">
+        <div class="relief-box compact">
           <div class="relief-item">
             <div class="subtitle"><span class="name">1세대 1주택 세율특례 경감</span></div>
-            <div class="amount">
-              <div class="relief-row"><span class="label">연간</span><span class="value" id="reliefSpecialY">-</span></div>
-            </div>
+            <div class="amount inline" id="reliefSpecialY">-</div>
           </div>
           <div class="relief-item">
             <div class="subtitle"><span class="name">세부담 상한 초과액 경감</span></div>
-            <div class="amount">
-              <div class="relief-row"><span class="label">연간</span><span class="value" id="reliefCapY">-</span></div>
-            </div>
+            <div class="amount inline" id="reliefCapY">-</div>
           </div>
         </div>
       </div>
@@ -624,6 +639,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 });
 
+// 스토리지 동기화
+window.addEventListener('storage',e=>{if(e.key===LS_KEY){renderCommentList();}});
+
 /* 한줄 코멘트(로컬) */
 const ADMIN_PIN="120410", LS_KEY="jw_comments_v1", UID_KEY="jw_uid_v1";
 function getUID(){let u=localStorage.getItem(UID_KEY);if(!u){u='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem(UID_KEY,u);}return u;}
@@ -633,7 +651,7 @@ function toggleAdmin(){const input=$('adminPin')?.value||'';if(isAdmin()){sessio
 function loadPosts(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]");}catch{return[]}}
 function savePosts(a){localStorage.setItem(LS_KEY,JSON.stringify(a))}
 function nowStr(){const d=new Date(),z=n=>String(n).padStart(2,'0');return`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;}
-function escapeHTML(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&quot;','\'':'&#39;'}[m]));}
 
 function createLine(){
   const raw = ($('코멘트입력')?.value||'').trim();
@@ -707,11 +725,6 @@ function renderCommentList(){
       </div>`;
   }).join('');
 }
-
-// 스토리지 동기화
-window.addEventListener('storage',e=>{if(e.key===LS_KEY){renderCommentList();}});
-
-document.addEventListener('DOMContentLoaded',renderCommentList);
 
 /* 🔽🔽🔽 PWA: 서비스워커 등록 + 설치 버튼 로직 🔽🔽🔽 */
 (function(){
