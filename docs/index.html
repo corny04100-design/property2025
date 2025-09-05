@@ -137,7 +137,7 @@ tfoot tr{background:var(--sum-bg);font-weight:900}
 tfoot th.big{font-size:15.2px}
 .sum-amount{font-size:14.4px !important;font-weight:900 !important;line-height:1.2}
 .sum-box{background:#ffffff;border:1px solid #cdd9ff;border-radius:12px;padding:14px 16px;margin:10px 0 12px 0;box-shadow:0 4px 10px rgba(44,88,255,.08);display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
-/* ▶ 합계 라벨: 검정색 & 1단계 크게 */
+/* ▶ 합계 라ベル */
 .sum-box .label{font-size:13.6px;color:#000;white-space:nowrap;letter-spacing:-0.2px;line-height:1.2;font-weight:700}
 .sum-box .value{font-size:14.4px;font-weight:900}
 
@@ -145,7 +145,6 @@ tfoot th.big{font-size:15.2px}
 .relief-section{margin-top:8px}
 .relief-header{display:flex;align-items:baseline;gap:8px}
 .relief-header h3{margin-top:5px;margin-bottom:0;font-size:13.6px;font-weight:800;color:#000}
-.relief-header h3::before{content:""}
 .relief-header .relief-total{font-size:14.4px;font-weight:900}
 
 .relief-box{
@@ -155,37 +154,17 @@ tfoot th.big{font-size:15.2px}
   box-shadow:0 6px 18px rgba(217,45,32,0.12);
   background:transparent;
 }
-/* ✅ 변경: 최대폭 90% (기존 60%에서 약 50% 확대) */
 .relief-box.compact{
   max-width:90%;
   display:flex;
   gap:12px;
   justify-content:space-between;
 }
-.relief-box.compact .relief-item{
-  flex:1;
-  text-align:center;
-  padding:4px 6px;
-}
-.relief-box.compact .subtitle .name{
-  font-size:12px;
-  font-weight:700;
-  white-space:nowrap;
-  letter-spacing:-0.5px;
-  color:#000 !important;
-}
-.relief-box.compact .amount.inline{
-  font-size:14px;
-  font-weight:900;
-  margin-top:2px;
-  white-space:nowrap;
-  line-height:1.2;
-  color:#000 !important;
-}
+.relief-box.compact .relief-item{flex:1;text-align:center;padding:4px 6px;}
+.relief-box.compact .subtitle .name{font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:-0.5px;color:#000!important;}
+.relief-box.compact .amount.inline{font-size:14px;font-weight:900;margin-top:2px;white-space:nowrap;line-height:1.2;color:#000!important;}
 
-@media (max-width:720px){
-  .relief-box.compact{max-width:100%;}
-}
+@media (max-width:720px){.relief-box.compact{max-width:100%;}}
 
 /* Notes & tips */
 .warn{color:var(--warn);font-size:12px;margin-top:8px;line-height:1.4;text-align:right}
@@ -215,7 +194,7 @@ tfoot th.big{font-size:15.2px}
 .comment{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:6px;margin-top:6px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .comment .meta{font-size:10px;color:#6b7280;margin-bottom:2px}
 
-/* Char counter: 왼쪽으로 5% 이동 */
+/* Char counter 위치 보정 */
 .char-count{font-size:10px;color:#6b7280;text-align:right;margin-top:4px;position:relative;left:-30% !important}
 
 /* Tabbar & Toast */
@@ -244,36 +223,24 @@ tfoot th.big{font-size:15.2px}
   .tips-pay,#section-inquiry{display:none !important}
 }
 
-/* 전용 미세조정 */
-.zr-flex3 .zr-field{flex:0 0 33.333%}
-label[for="자원_과표"]{letter-spacing:-0.3px}
-label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spacing:-0.4px;white-space:nowrap}
-.zr-flex3 .zr-field input{height:40px;width:90%;margin:0;display:block}
-
 /* 버튼 배경 색상(주택공시가격=초록, 지방세법=빨강) */
-.app-actions a[onclick^="openLookupNew"]{
-  background:#eaf7ee;border-color:#cfe8d8;
-}
-.app-actions a[href*="law.go.kr"]{
-  background:#fdecec;border-color:#f4c6c6;
-}
+.app-actions a[onclick^="openLookupNew"]{background:#eaf7ee;border-color:#cfe8d8;}
+.app-actions a[href*="law.go.kr"]{background:#fdecec;border-color:#f4c6c6;}
 .app-actions a[onclick^="openLookupNew"]:hover,
 .app-actions a[href*="law.go.kr"]:hover{filter:brightness(1.03);} 
 
-/* 🔒 V3 공개 정책: 비공개 스위치 숨김 */
+/* 🔒 공개 정책: 비공개 스위치 숨김 */
 #section-inquiry .switch{display:none !important}
 </style>
 </head>
 <body>
 <header class="appbar">
   <div class="row">
-    <!-- 브랜드 문구는 숨김 상태 유지 -->
     <div class="brand">
       <span class="logo">🏛️</span>
       <span class="title">2025년 재산세 계산</span>
     </div>
 
-    <!-- 왼편: 아이콘 박스 3개 + 🔽 앱 설치 버튼 -->
     <div class="app-actions">
       <a class="icon-btn lg" href="javascript:void(0)" onclick="openPrint()" title="인쇄(대상: PDF 저장 선택 가능)" aria-label="인쇄 미리보기">
         <span class="ico-printer" aria-hidden="true">
@@ -297,11 +264,10 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
         <span aria-hidden="true">🔍</span> 지방세법
       </a>
 
-      <!-- 🔽 여기! 앱 설치 버튼 -->
       <button id="install" type="button">앱 설치</button>
     </div>
 
-    <!-- 오른편: PIN 문구 + 입력박스(우측 정렬), 관리자 전환 버튼 -->
+    <!-- 오른쪽 관리자 전환 -->
     <div class="admin-mini">
       <label for="adminPin" class="pin-label">PIN</label>
       <input id="adminPin" class="input-pin" type="password" placeholder="****" />
@@ -326,7 +292,6 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
         <h2>1. 공동주택 정보입력<span class="unit">(단위: 원)</span></h2>
       </div>
 
-      <!-- ▶ 33% 균등폭 & 라벨 중앙정렬 & 동일 높이 -->
       <div class="row3 equal3 align-end" style="margin-top:10px">
         <div>
           <label>2025년 주택공시가격</label>
@@ -342,7 +307,6 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
         </div>
       </div>
 
-      <!-- 선택입력 줄 -->
       <div class="zr-inline">
         <details class="zr-toggle">
           <summary>선택입력 (더보기)</summary>
@@ -367,7 +331,6 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
         </details>
       </div>
 
-      <!-- 계산하기 위 전용 줄: 도시지역분 과세 -->
       <div class="urban-row" aria-label="도시지역분 과세 선택">
         <div class="switch">
           <input id="도시과세" type="checkbox" checked>
@@ -382,7 +345,6 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
         <div class="right" style="display:none"></div>
       </div>
 
-      <!-- 세액산출 정보 -->
       <div style="margin-top:10px" class="swap-breakdown">
         <details open>
           <summary>세액산출 정보</summary>
@@ -414,7 +376,6 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
         <tfoot><tr><th class="big">합계 세액</th><th class="mono sum-amount" id="sumY">-</th><th class="mono sum-amount" id="sumQ">-</th></tr></tfoot>
       </table>
 
-      <!-- ✅ 경감세액: 요청 레이아웃 반영 -->
       <div class="relief-section" id="reliefSection">
         <div class="relief-header">
           <h3>경감세액(연간):</h3>
@@ -452,8 +413,8 @@ label[for="전년_재산세액"], label[for="전년_도시지역분"]{letter-spa
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+<!-- 비즈니스 로직/유틸 -->
 <script>
-/* 유틸 */
 const $=id=>document.getElementById(id);
 const setText=(id,v)=>{const el=$(id); if(el) el.textContent=v;}
 const setHTML=(id,v)=>{const el=$(id); if(el) el.innerHTML=v;}
@@ -462,16 +423,14 @@ const floor10=n=>Math.floor(n/10)*10;
 const fmt=n=>(Number.isFinite(n)?floor10(n).toLocaleString('ko-KR')+'원':'-');
 const fmtPct=p=>{const v=Math.round(p*10000)/100;return(Math.abs(v-Math.round(v))<1e-9)?(Math.round(v)+'%'):(v+'%');};
 const fmtPctInt=r=> (Math.round(r*100))+'%';
-function toast(msg){const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);} 
-function jumpTo(id){$(id)?.scrollIntoView({behavior:'smooth',block:'start'});} 
+function toast(msg){const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);}
 
-/* 링크 */
 function openLookupNew(){window.open('https://www.realtyprice.kr/notice/town/nfSiteLink.htm','_blank','noopener');}
 
 /* 입력 숫자 콤마 */
 document.addEventListener('input',e=>{
   if(e.target.classList.contains('num')){
-    let v=e.target.value.replace(/,/g,'').replace(/[^\d]/g,''); // 정수만 허용
+    let v=e.target.value.replace(/,/g,'').replace(/[^\d]/g,'');
     if(v===''){e.target.value='';return;}
     e.target.value=v.replace(/\B(?=(\d{3})+(?!\d))/g,",");
   }
@@ -498,25 +457,16 @@ const CITY_RATE=0.0014, EDU_RATE=0.20;
 const ZR_TABLE=[{base:0,rate:0.0004,minus:0},{base:6000000,rate:0.0005,minus:600},{base:13000000,rate:0.0006,minus:1900},{base:26000000,rate:0.0008,minus:7100},{base:39000000,rate:0.0010,minus:14900},{base:64000000,rate:0.0012,minus:27700}];
 const USING_LABEL={general:'일반세율',special:'1주택 특례세율'};
 
-/* 규칙 함수 */
 const appliedPublicPrice=(curP,prevP)=>Math.min(prevP+curP*0.05,curP);
 function getCsmar(appliedPublic,homes){
-  if(homes===1){
-    return (appliedPublic<=300_000_000)?0.43:(appliedPublic<=600_000_000)?0.44:0.45;
-  }
+  if(homes===1){return (appliedPublic<=300_000_000)?0.43:(appliedPublic<=600_000_000)?0.44:0.45;}
   return 0.60;
 }
 const chooseUsingKey=(curPublic,homes)=>(curPublic>900_000_000)?'general':(homes===1?'special':'general');
 function pickBracket(base,table){let cur=table[0];for(const b of table){if(base>=b.base) cur=b; else break;}return cur;}
 function computeBasicTax(base,usingKey){
-  if(base<=SIMPLE_THRESHOLD){
-    const r=SIMPLE_RATE[usingKey];
-    const y=Math.floor(base*r);
-    return{y,q:Math.floor(y/2),labelMain:USING_LABEL[usingKey]};
-  }
-  const rule=pickBracket(base,RATE_TABLES[usingKey]);
-  const y=Math.floor(base*rule.rate-rule.minus);
-  return{y,q:Math.floor(y/2),labelMain:USING_LABEL[usingKey]};
+  if(base<=SIMPLE_THRESHOLD){const r=SIMPLE_RATE[usingKey];const y=Math.floor(base*r);return{y,q:Math.floor(y/2),labelMain:USING_LABEL[usingKey]};}
+  const rule=pickBracket(base,RATE_TABLES[usingKey]);const y=Math.floor(base*rule.rate-rule.minus);return{y,q:Math.floor(y/2),labelMain:USING_LABEL[usingKey]};
 }
 const computeCity=base=>{const y=Math.floor(base*CITY_RATE);return{y,q:Math.floor(y/2)};}
 const computeEdu=y_bon=>{const y=Math.floor(y_bon*EDU_RATE);return{y,q:Math.floor(y/2)};}
@@ -526,7 +476,6 @@ function computeZR(zrBase){
   if(rawYear<4000||rawQuarter<2000){const label='<span class="tiny">세액없음(소액)</span>';return{displayY:label,displayQ:label,addY:0,addQ:0};}
   return{displayY:fmt(rawYear),displayQ:fmt(rawQuarter),addY:rawYear,addQ:rawQuarter};
 }
-/* 세부담상한율 (전년값 입력 시 상한 적용) */
 function getBurdenCapRate(curPublic){
   if(curPublic>600_000_000) return 1.30;
   if(curPublic>300_000_000 && curPublic<=600_000_000) return 1.10;
@@ -545,115 +494,91 @@ function calc(){
   const homes=Number((($('주택수')?.value)||'1').replace(/,/g,''))||1;
   const urban=$('도시과세')?.checked ?? true;
 
-  // 과표상한 적용 공시가격 / 공정시장가액비율 / 과세표준
   const applied=appliedPublicPrice(curP,prevP);
   const csmar=getCsmar(applied,homes);
   const base=Math.floor(applied*csmar);
 
-  // 기본 세액(상한 적용 전)
   const usingKey=chooseUsingKey(curP,homes);
-  const basic0=computeBasicTax(base,usingKey); // 본세
-  const city0=urban?computeCity(base):{y:0,q:0}; // 도시지역분
+  const basic0=computeBasicTax(base,usingKey);
+  const city0=urban?computeCity(base):{y:0,q:0};
 
-  // 세부담상한율
   const burdenCap=getBurdenCapRate(curP);
 
-  // 전년 값 기반 상한 적용 (입력된 경우만)
   const priorBon=numOf('전년_재산세액');
   const priorCity=numOf('전년_도시지역분');
 
-  // 상한: 전년금액 * 세부담상한율
   const capBon = (priorBon>0) ? Math.floor(priorBon * burdenCap) : Infinity;
   const capCity= (priorCity>0) ? Math.floor(priorCity * burdenCap) : Infinity;
 
-  // 본세 상한 적용
   let y_bon = Math.min(basic0.y, capBon);
   if (!Number.isFinite(capBon)) y_bon = basic0.y;
   let q_bon = Math.floor(y_bon/2);
 
-  // 본세 기반 지방교육세 재계산
   const edu = computeEdu(y_bon);
 
-  // 도시지역분 상한 적용
   let y_city = Math.min(city0.y, capCity);
   if (!Number.isFinite(capCity)) y_city = city0.y;
   let q_city = Math.floor(y_city/2);
 
-  // 지역자원시설세(선택)
   const zr=computeZR(numOf('자원_과표'));
 
-  // ▶ 경감세액 계산
   const generalBasic = computeBasicTax(base,'general').y;
   const specialBasic = computeBasicTax(base,'special').y;
   const isSpecial = (homes===1) && (curP<=900_000_000);
   const reliefSpecial = isSpecial ? Math.max(0, generalBasic - specialBasic) : 0;
 
-  // 상한 경감: (본세 상한차감 + 도시지역분 상한차감)
   const diffBon = Math.max(0, basic0.y - y_bon);
   const diffCity = Math.max(0, city0.y - y_city);
   const reliefCap = diffBon + diffCity;
 
   const reliefTotal = floor10(reliefSpecial) + floor10(reliefCap);
 
-  // 합계(표시값 기준: 각 세목 10원 절사 후 합산)
   const y_bon_d=floor10(y_bon), y_city_d=floor10(y_city), edu_y_d=floor10(edu.y), zr_y_d=floor10(zr.addY);
   const q_bon_d=floor10(q_bon), q_city_d=floor10(q_city), edu_q_d=floor10(edu.q), zr_q_d=floor10(zr.addQ);
   const y_sum=y_bon_d + y_city_d + edu_y_d + zr_y_d;
   const q_sum=q_bon_d + q_city_d + edu_q_d + zr_q_d;
 
-  // 표
   const rows=[
     ['재산세(본세)',fmt(y_bon),fmt(q_bon)],
     ['도시지역분',fmt(y_city),fmt(q_city)],
     ['지방교육세',fmt(edu.y),fmt(edu.q)],
     ['지역자원시설세',zr.displayY,zr.displayQ],
-  ].map(([n,y,q])=>`<tr><td class=\"th-center\">${n}</td><td class=\"mono\">${y}</td><td class=\"mono\">${q}</td></tr>`).join('');
+  ].map(([n,y,q])=>`<tr><td class="th-center">${n}</td><td class="mono">${y}</td><td class="mono">${q}</td></tr>`).join('');
   setHTML('tb',rows);
 
-  // 합계(요약/하단)
   setText('sumY',fmt(y_sum)); setText('sumQ',fmt(q_sum));
   setText('sumY_top',fmt(y_sum)); setText('sumQ_top',fmt(q_sum));
 
-  // 세액산출 정보
   updateBreakdown(applied,base,basic0.labelMain,csmar,burdenCap);
 
-  // 경감세액 UI 반영
   setText('reliefTotal', fmt(reliefTotal));
   setText('reliefSpecialY', fmt(reliefSpecial));
   setText('reliefCapY', fmt(reliefCap));
 }
 
-/* 인쇄 */
-function openPrint(){calc();window.print();}
-
-/* 초기/이벤트 연결 */
+/* 초기 UI */
 document.addEventListener('DOMContentLoaded',()=>{
   ['전년_재산세액','전년_도시지역분'].forEach(id=>{
-    $(id)?.addEventListener('input',()=>{}); // 상한 경감 안내 토글 제거
+    $(id)?.addEventListener('input',()=>{});
   });
-
-  // 코멘트 카운터
   const ci=$('코멘트입력');
   if(ci){
     ci.addEventListener('input',()=>{
       const MAX=40;
-      if(ci.value.length>MAX){ci.value=ci.value.slice(0,MAX);} 
+      if(ci.value.length>MAX){ci.value=ci.value.slice(0,MAX);}
       const cnt=$('코멘트카운트'); if(cnt) cnt.textContent=ci.value.length;
     });
     const cnt=$('코멘트카운트'); if(cnt) cnt.textContent=ci.value.length||0;
   }
 });
-
-// (V1 잔존 로컬 코드: Firebase가 아래에서 덮어씁니다)
 </script>
 
-<!-- 🔥 Firebase 연결 스니펫 (CDN / 모듈형, v12.2.1) -->
+<!-- 🔥 Firebase (CDN / ES Module) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
   import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-  // 🔧 Firebase 설정
   const firebaseConfig = {
     apiKey: "AIzaSyDx2-rk1FBsRIbXhEVz2GCxp-N_5v6v9uo",
     authDomain: "propertytax-2025.firebaseapp.com",
@@ -668,18 +593,19 @@ document.addEventListener('DOMContentLoaded',()=>{
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // ✅ ⬇️ 여기 교체(소문자 비교)
+  /* ✅ 관리자 이메일 화이트리스트(소문자 비교) */
   const ADMIN_EMAILS = ["kor7@kakao.com"].map(s => s.toLowerCase());
   const isAdminUser = (user) => !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
 
+  /* 공통 유틸(모듈 로컬) */
   const $ = (id) => document.getElementById(id);
-  function toast(msg){const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);} 
-  function escapeHTML(s){return String(s).replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\\'':'&#39;','\"':'&quot;'}[m]));}
+  const toast = (msg)=>{const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);}
+  const escapeHTML = (s)=> String(s).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[m]));
 
-  // 비로그인 사용자는 자동 익명 로그인 시도
+  /* 익명 로그인 시도(모두 쓰기 허용 전제 규칙과 매칭) */
   signInAnonymously(auth).catch(()=>{});
 
-  let READY=false, unsubscribe=null, CURRENT_USER=null, IS_ADMIN=false;
+  let READY=false, IS_ADMIN=false, unsubscribe=null;
 
   function updateAdminUI(){
     const pinLabel=document.querySelector('.pin-label');
@@ -687,14 +613,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 
   onAuthStateChanged(auth, (user)=>{
-    READY=!!user; CURRENT_USER=user||null; IS_ADMIN=isAdminUser(CURRENT_USER);
+    READY=!!user;
+    IS_ADMIN=isAdminUser(user);
     updateAdminUI();
-    if (typeof window.renderCommentList === 'function') {
-      window.renderCommentList();
-    }
+    window.renderCommentList?.();
   });
 
-  // 🔐 관리자 로그인/로그아웃 (상단 🔁 버튼)
+  /* 🔐 관리자 토글(상단 🔁 버튼) */
   window.toggleAdmin = async function toggleAdmin(){
     try{
       if(IS_ADMIN){ await signOut(auth); toast('관리자 로그아웃'); return; }
@@ -702,7 +627,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       const pw    = prompt('비밀번호');
       if(!email || !pw){ toast('이메일/비밀번호가 필요합니다.'); return; }
       await signInWithEmailAndPassword(auth, email, pw);
-      // 로그인 직후 즉시 반영
       IS_ADMIN = isAdminUser(auth.currentUser);
       updateAdminUI();
       window.renderCommentList?.();
@@ -710,7 +634,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     }catch(e){ console.error('[admin login]', e); toast('로그인 실패: ' + (e?.code||e?.message||'오류')); }
   }
 
-  // 📝 등록: 전면 공개
+  /* 📝 등록: createdAt을 new Date()로 저장 */
   window.createLine = async function createLine(){
     try{
       if(!READY){ toast('잠시 후 다시 시도하세요. (로그인 준비 중)'); return; }
@@ -731,16 +655,19 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   }
 
-  // 📜 목록: 모두 공개, 관리자에겐 수정/삭제 UI 표시
+  /* 📜 목록/리렌더: 관리자에겐 수정/삭제 UI 제공 */
   window.renderCommentList = function renderCommentList(){
     const el=$('commentList'); if(!el) return;
     if(unsubscribe){ unsubscribe(); unsubscribe=null; }
     const q = query(collection(db,'comments'), orderBy('createdAt','desc'));
-    unsubscribe = onSnapshot(q, (snap)=>{
+    unsubscribe = window.firebaseUnsub = onSnapshot(q, (snap)=>{
       const posts=snap.docs.map(d=>({id:d.id, ...d.data()}));
       if(!posts.length){ el.innerHTML=''; return; }
       const html=posts.map(p=>{
-        const ts=p.createdAt?.seconds?new Date(p.createdAt.seconds*1000):new Date();
+        let ts;
+        if(p.createdAt?.toDate){ ts = p.createdAt.toDate(); }
+        else if(typeof p.createdAt?.seconds === 'number'){ ts = new Date(p.createdAt.seconds*1000); }
+        else { ts = new Date(); }
         const z=n=>String(n).padStart(2,'0');
         const createdAt=`${ts.getFullYear()}-${z(ts.getMonth()+1)}-${z(ts.getDate())} ${z(ts.getHours())}:${z(ts.getMinutes())}`;
         const adminBox = IS_ADMIN ? `
@@ -764,19 +691,19 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   }
 
-  // ✏️ 수정
+  /* ✏️ 수정: updatedAt을 new Date()로 저장 */
   window.updatePost = async function updatePost(postId){
     try{
       if(!IS_ADMIN){ toast('관리자만 수정할 수 있습니다.'); return; }
       const ta=$('edit_'+postId);
       const text=(ta?.value||'').trim().slice(0,40);
       if(!text){ toast('내용을 입력하세요.'); return; }
-      await updateDoc(doc(db,'comments',postId), { text, updatedAt: serverTimestamp() });
+      await updateDoc(doc(db,'comments',postId), { text, updatedAt: new Date() });
       toast('수정되었습니다.');
     }catch(e){ console.error('[updatePost]',e); toast('수정 실패: '+(e?.code||e?.message||'오류')); }
   }
 
-  // 🗑️ 삭제
+  /* 🗑️ 삭제 */
   window.deletePostDb = async function deletePostDb(postId){
     try{
       if(!IS_ADMIN){ toast('관리자만 삭제할 수 있습니다.'); return; }
@@ -787,7 +714,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 </script>
 
-<!-- PWA: 서비스워커/설치 버튼 로직 (선택) -->
+<!-- PWA: 서비스워커/설치 버튼 (선택) -->
 <script>
 (function(){
   if ('serviceWorker' in navigator) {
@@ -801,8 +728,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if (btn) {
     btn.addEventListener('click', async () => {
       if (!deferredPrompt) return;
-      btn.disabled = true;
-      deferredPrompt.prompt();
+      btn.disabled = true; deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       deferredPrompt = null; btn.style.display = 'none';
     });
