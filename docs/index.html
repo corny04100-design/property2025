@@ -145,7 +145,7 @@ tfoot th.big{font-size:15.2px}
 .relief-section{margin-top:8px}
 .relief-header{display:flex;align-items:baseline;gap:8px}
 .relief-header h3{margin-top:5px;margin-bottom:0;font-size:13.6px;font-weight:800;color:#000}
-.relief-header h3::before{content:"";}
+.relief-header h3::before{content:""}
 .relief-header .relief-total{font-size:14.4px;font-weight:900}
 
 .relief-box{
@@ -644,7 +644,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 // 스토리지 동기화
 window.addEventListener('storage',e=>{if(e.key===LS_KEY){renderCommentList();}});
 
-/* 한줄 코멘트(로컬) */
+/* 한줄 코멘트(로컬) — V1에서 Firestore로 덮어쓸 예정 */
 const ADMIN_PIN="120410", LS_KEY="jw_comments_v1", UID_KEY="jw_uid_v1";
 function getUID(){let u=localStorage.getItem(UID_KEY);if(!u){u='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem(UID_KEY,u);}return u;}
 const UID=getUID();
@@ -773,6 +773,95 @@ function renderCommentList(){
     actions && actions.appendChild(tip);
   }
 })();
+</script>
+
+<!-- 🔥 Firebase 연결 스니펫 (CDN / 모듈형, v12.2.1) : 이 스크립트를 페이지 맨 아래에 둬서 위 함수들을 덮어씁니다. -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+  // ✅ Firebase 구성 (사용자 제공 값)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDx2-rk1FBsRIbXhEVz2GCxp-N_5v6v9uo",
+    authDomain: "propertytax-2025.firebaseapp.com",
+    projectId: "propertytax-2025",
+    storageBucket: "propertytax-2025.firebasestorage.app",
+    messagingSenderId: "837197485676",
+    appId: "1:837197485676:web:a256db7e6dd0188a036a49",
+    measurementId: "G-N8QV30BCFZ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // 익명 로그인 → 완료 후 실시간 구독 시작
+  signInAnonymously(auth).catch(console.error);
+
+  let READY = false;
+  let unsubscribe = null;
+  let CURRENT_USER = null;
+
+  onAuthStateChanged(auth, (user) => {
+    READY = !!user;
+    CURRENT_USER = user || null;
+    if (!READY) return;
+
+    // Firestore 실시간 목록 렌더(V2: 비공개/내 글 표시)
+    window.renderCommentList = function renderCommentList() {
+      const el = document.getElementById('commentList');
+      if (!el) return;
+      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      const q = query(collection(db, 'comments'), orderBy('createdAt', 'desc'));
+      unsubscribe = onSnapshot(q, (snap) => {
+        const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (!posts.length) { el.innerHTML = ''; return; }
+        const html = posts.map(p => {
+          const ts = p.createdAt?.seconds ? new Date(p.createdAt.seconds * 1000) : new Date();
+          const z = n => String(n).padStart(2, '0');
+          const createdAt = `${ts.getFullYear()}-${z(ts.getMonth()+1)}-${z(ts.getDate())} ${z(ts.getHours())}:${z(ts.getMinutes())}`;
+          const secretNote = p.secret ? `<span class="badge" style="background:#fdecec;color:#d92d20">비공개</span>` : '';
+          const ownerNote = (CURRENT_USER && p.ownerUid === CURRENT_USER.uid) ? `<span class="badge">내 글</span>` : '';
+          return `
+            <div class=\"post-card\">
+              <div class=\"post-row\">
+                <div class=\"post-text\">${escapeHTML(p.text || '')}</div>
+                <div class=\"post-meta\">${createdAt} ${secretNote} ${ownerNote}</div>
+              </div>
+            </div>`;
+        }).join('');
+        el.innerHTML = html;
+      });
+    };
+
+    // 코멘트 등록(V2: 비공개/소유자 저장)
+    window.createLine = async function createLine() {
+      if (!READY) { toast('잠시 후 다시 시도하세요.'); return; }
+      const input = document.getElementById('코멘트입력');
+      const secretChk = document.getElementById('비공개체크');
+      const raw = (input?.value || '').trim();
+      if (!raw) { toast('코멘트를 입력하세요.'); return; }
+      const text = raw.slice(0, 40);
+      const secret = !!(secretChk?.checked);
+
+      await addDoc(collection(db, 'comments'), {
+        text,
+        secret,
+        ownerUid: CURRENT_USER?.uid || null,
+        createdAt: serverTimestamp()
+      });
+
+      if (input) input.value = '';
+      if (secretChk) secretChk.checked = false;
+      const cnt = document.getElementById('코멘트카운트');
+      if (cnt) cnt.textContent = '0';
+      toast('등록되었습니다.');
+    };
+
+    // 최초 1회 렌더(실시간 구독 시작)
+    window.renderCommentList();
+  });
 </script>
 </body>
 </html>
