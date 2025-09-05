@@ -837,26 +837,41 @@ function renderCommentList(){
 
     // 코멘트 등록(V2: 비공개/소유자 저장)
     window.createLine = async function createLine() {
-      if (!READY) { toast('잠시 후 다시 시도하세요.'); return; }
-      const input = document.getElementById('코멘트입력');
-      const secretChk = document.getElementById('비공개체크');
-      const raw = (input?.value || '').trim();
-      if (!raw) { toast('코멘트를 입력하세요.'); return; }
-      const text = raw.slice(0, 40);
-      const secret = !!(secretChk?.checked);
+      try {
+        if (!READY) { toast('잠시 후 다시 시도하세요. (로그인 준비 중)'); return; }
+        const input = document.getElementById('코멘트입력');
+        const secretChk = document.getElementById('비공개체크');
+        const raw = (input?.value || '').trim();
+        if (!raw) { toast('코멘트를 입력하세요.'); return; }
+        const text = raw.slice(0, 40);
+        const secret = !!(secretChk?.checked);
 
-      await addDoc(collection(db, 'comments'), {
-        text,
-        secret,
-        ownerUid: CURRENT_USER?.uid || null,
-        createdAt: serverTimestamp()
-      });
+        await addDoc(collection(db, 'comments'), {
+          text,
+          secret,
+          ownerUid: CURRENT_USER?.uid || null,
+          createdAt: serverTimestamp()
+        });
 
-      if (input) input.value = '';
-      if (secretChk) secretChk.checked = false;
-      const cnt = document.getElementById('코멘트카운트');
-      if (cnt) cnt.textContent = '0';
-      toast('등록되었습니다.');
+        if (input) input.value = '';
+        if (secretChk) secretChk.checked = false;
+        const cnt = document.getElementById('코멘트카운트');
+        if (cnt) cnt.textContent = '0';
+        toast('등록되었습니다.');
+      } catch (e) {
+        console.error('[createLine] 실패:', e);
+        // 친절한 오류 메시지
+        const code = e?.code || '';
+        if (code.includes('permission') || code.includes('denied')) {
+          toast('등록 실패: Firestore 규칙 때문에 거부됨 (permission-denied). 규칙을 완화 후 재시도하세요.');
+        } else if (code.includes('auth')) {
+          toast('등록 실패: 인증 문제. 익명 로그인(Authorized domains 포함) 상태를 확인하세요.');
+        } else if (code.includes('unavailable') || code.includes('network')) {
+          toast('등록 실패: 네트워크/서버 일시 문제. 새로고침 후 다시 시도하세요.');
+        } else {
+          toast('등록 실패: ' + (e?.message || '알 수 없는 오류'));
+        }
+      }
     };
 
     // 최초 1회 렌더(실시간 구독 시작)
