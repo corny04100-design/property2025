@@ -718,7 +718,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       const raw=(input?.value||'').trim();
       if(!raw){ toast('코멘트를 입력하세요.'); return; }
       const text=raw.slice(0,40);
-      await addDoc(collection(db,'comments'), { text, createdAt: serverTimestamp() });
+      await addDoc(collection(db,'comments'), { text, createdAt: new Date() });
       if(input) input.value=''; const cnt=$('코멘트카운트'); if(cnt) cnt.textContent='0';
       toast('등록되었습니다.');
     }catch(e){
