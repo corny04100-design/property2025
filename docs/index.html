@@ -41,7 +41,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
 .ico-printer{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
 .ico-printer svg{width:100%;height:100%}
 .ico-printer .st{fill:none;stroke:var(--icon);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* Icon badge (optional) */
+<!-- Icon badge (optional) -->
 .ico-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;border:1px solid var(--line);font-size:12px;line-height:1}
 .ico-badge.green{background:#eaf7ee;border-color:#cfe8d8}
 .ico-badge.red{background:#fdecec;border-color:#f4c6c6}
@@ -413,7 +413,7 @@ tfoot th.big{font-size:15.2px}
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<!-- 비즈니스 로직/유틸 -->
+<!-- 비즈니스 로직/유틸 (비모듈: 전역 함수 제공) -->
 <script>
 const $=id=>document.getElementById(id);
 const setText=(id,v)=>{const el=$(id); if(el) el.textContent=v;}
@@ -554,6 +554,16 @@ function calc(){
   setText('reliefTotal', fmt(reliefTotal));
   setText('reliefSpecialY', fmt(reliefSpecial));
   setText('reliefCapY', fmt(reliefCap));
+}
+
+/* ✅ 인쇄/저장 버튼 함수(전역) */
+function openPrint(){
+  try{
+    if(typeof calc==='function') calc();       // 최신 계산 반영
+    setTimeout(()=>window.print(), 0);         // UI 갱신 후 프린트
+  }catch(e){
+    window.print();
+  }
 }
 
 /* 초기 UI */
