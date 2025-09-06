@@ -1,11 +1,19 @@
 {
+  "id": "./?app=propertytax",
   "name": "재산세 계산",
   "short_name": "재산세",
-  "start_url": ".",
+  "description": "공동주택(아파트·연립·빌라·다세대) 재산세 간편 계산기",
+  "lang": "ko-KR",
+  "dir": "ltr",
+
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone"],
   "background_color": "#ffffff",
   "theme_color": "#b71c1c",
   "orientation": "portrait",
+
   "icons": [
     {
       "src": "icon-192-v2.png",
@@ -19,5 +27,22 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+
+  "shortcuts": [
+    {
+      "name": "계산하기",
+      "short_name": "계산",
+      "url": "./index.html#section-input",
+      "icons": [{ "src": "icon-192-v2.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "최종 세액",
+      "short_name": "세액",
+      "url": "./index.html#section-result",
+      "icons": [{ "src": "icon-192-v2.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["utilities", "finance", "productivity"],
+  "prefer_related_applications": false
 }
