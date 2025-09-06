@@ -1,7 +1,7 @@
 {
   "id": "./?app=propertytax",
-  "name": "재산세 계산",
-  "short_name": "재산세",
+  "name": "재산세계산",
+  "short_name": "재산세계산",
   "description": "공동주택(아파트·연립·빌라·다세대) 재산세 간편 계산기",
   "lang": "ko-KR",
   "dir": "ltr",
