@@ -786,7 +786,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if (isStandalone && btn) btn.style.display = 'none';
 })();
 </script>
-<!-- 🔧 Everyone can write comments; only admin can edit/delete — paste right before </body> (replace previous patch) -->
+<!-- 🔧 Everyone can write comments; only admin can edit/delete; use serverTimestamp — paste right before </body> (replace previous patch) -->
 <script type="module">
 /* ========== 1) CSS (댓글/대댓글 최소 UI) ========== */
 const __PATCH_STYLE_ID__ = "comment-reply-patch-style-public-write";
@@ -812,7 +812,7 @@ if (!document.getElementById(__PATCH_STYLE_ID__)) {
 import { getApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, query, orderBy, onSnapshot,
-  doc, updateDoc, deleteDoc
+  doc, updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
@@ -822,7 +822,7 @@ const auth = getAuth(app);
 
 /* ========== 3) 유틸 ========== */
 const $ = (id) => document.getElementById(id);
-const escapeHTML = (s)=> String(s).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[m]));
+const escapeHTML = (s)=> String(s).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&gt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[m]));
 const toast = (msg)=> (window.toast ? window.toast(msg) : console.log('[toast]', msg));
 
 /* ========== 4) 상태 & 권한 ========== */
@@ -833,15 +833,15 @@ const ADMIN_EMAILS = ["kor7@kakao.com"].map(s=>s.toLowerCase());
 const isAdminUser  = (user)=> !!user?.email && ADMIN_EMAILS.includes(String(user.email).toLowerCase());
 const canAdmin     = ()=> !!IS_ADMIN;
 
-/* 🔐 익명 로그인 보장 + uid 반환 */
+/* 🔐 익명 로그인 보장 + uid 반환(실패해도 null 허용: 규칙이 익명 허용이면 통과) */
 async function ensureUid(){
   if (auth.currentUser?.uid) return auth.currentUser.uid;
   try{
     const cred = await signInAnonymously(auth);
     return cred?.user?.uid || null;
   }catch(e){
-    console.error('[ensureUid] signInAnonymously failed:', e);
-    return null;
+    console.warn('[ensureUid] signInAnonymously failed:', e?.code||e?.message||e);
+    return null; // uid 없이도 작성 시도 (규칙이 허용하면 성공)
   }
 }
 
@@ -885,14 +885,11 @@ function enableComposerForAll(){
   const btn   = document.querySelector('#section-inquiry .board-head button.btn.btn-calc');
   if(!input || !btn) return;
 
-  // 항상 사용 가능
   input.removeAttribute('disabled'); input.style.opacity='';
   btn.disabled=false; btn.title='등록'; btn.style.opacity='';
-
-  // placeholder를 항상 기본 문구로 강제 설정
   input.placeholder = '코멘트를 남겨주세요. (40자 이내)';
 
-  // 혹시 남아있을 수 있는 '관리자 전용' 안내 텍스트 제거
+  // 혹시 남아있을 수 있는 안내 문구 텍스트 노드 정리
   const section = document.querySelector('#section-inquiry');
   if(section){
     [...section.querySelectorAll('*')].forEach(node=>{
@@ -909,24 +906,26 @@ function enableComposerForAll(){
 onAuthStateChanged(auth, (user)=>{
   CURRENT_UID = user?.uid || null;
   IS_ADMIN    = isAdminUser(user);
-  enableComposerForAll();          // ✅ 항상 활성화 + 문구 제거
+  enableComposerForAll();          // ✅ 항상 활성화
   window.renderCommentList?.(true);
 });
 
 /* ========== 7) 액션들 ========== */
-// ✅ 최상위 코멘트: 누구나 가능 (authorId 보장)
+// ✅ 최상위 코멘트: 누구나 가능 (authorId 보장 시도, 실패해도 진행)
 window.createLine = async function createLine(){
   try{
     const input = $('코멘트입력');
     const raw   = (input?.value||'').trim();
     if(!raw){ toast('코멘트를 입력하세요.'); return; }
 
-    const uid = await ensureUid();
-    if(!uid){ toast('로그인 오류로 등록이 차단되었습니다. 새로고침 후 다시 시도하세요.'); return; }
-
+    const uid = await ensureUid(); // null이어도 진행
     const text = raw.slice(0,40);
+
     await addDoc(collection(db,'comments'), {
-      text, createdAt: new Date(), authorId: uid, parentId: null
+      text,
+      createdAt: serverTimestamp(),    // ★ 서버 타임스탬프 (규칙 호환성 ↑)
+      authorId: uid || null,
+      parentId: null
     });
 
     if(input) input.value='';
@@ -934,11 +933,18 @@ window.createLine = async function createLine(){
     toast('등록되었습니다.');
   }catch(e){
     console.error('[createLine]', e);
-    toast('등록 실패: '+(e?.code||e?.message||'오류'));
+    const code = e?.code || '';
+    if(code.includes('permission')||code.includes('denied')){
+      toast('등록 실패: Firestore 규칙 거부(permission-denied). 인증/규칙 설정을 확인하세요.');
+    }else if(code.includes('operation-not-allowed')){
+      toast('등록 실패: Firebase 콘솔에서 익명 로그인(Anonymous) 사용을 허용하세요.');
+    }else{
+      toast('등록 실패: '+(e?.message||'알 수 없는 오류'));
+    }
   }
 };
 
-// ✅ 대댓글: 누구나 가능 (authorId 보장)
+// ✅ 대댓글: 누구나 가능 (authorId 보장 시도, 실패해도 진행)
 window.toggleReplyForm = function toggleReplyForm(parentId){
   const el = $('replybox_'+parentId);
   if(!el) return;
@@ -951,19 +957,28 @@ window.createReply = async function createReply(parentId){
     const raw   = (input?.value||'').trim();
     if(!raw){ toast('댓글을 입력하세요.'); return; }
 
-    const uid = await ensureUid();
-    if(!uid){ toast('로그인 오류로 등록이 차단되었습니다. 새로고침 후 다시 시도하세요.'); return; }
-
+    const uid = await ensureUid(); // null이어도 진행
     const text = raw.slice(0,40);
+
     await addDoc(collection(db,'comments'), {
-      text, createdAt: new Date(), authorId: uid, parentId
+      text,
+      createdAt: serverTimestamp(),    // ★ 서버 타임스탬프
+      authorId: uid || null,
+      parentId
     });
 
     if(input) input.value='';
     toast('댓글이 등록되었습니다.');
   }catch(e){
     console.error('[createReply]', e);
-    toast('댓글 등록 실패: '+(e?.code||e?.message||'오류'));
+    const code = e?.code || '';
+    if(code.includes('permission')||code.includes('denied')){
+      toast('댓글 등록 실패: Firestore 규칙 거부(permission-denied). 인증/규칙 설정을 확인하세요.');
+    }else if(code.includes('operation-not-allowed')){
+      toast('댓글 등록 실패: Firebase 콘솔에서 익명 로그인(Anonymous) 사용을 허용하세요.');
+    }else{
+      toast('댓글 등록 실패: '+(e?.message||'알 수 없는 오류'));
+    }
   }
 };
 
@@ -980,7 +995,7 @@ window.saveEdit = async function saveEdit(postId){
     const ta=$('edit_'+postId);
     const text=(ta?.value||'').trim().slice(0,40);
     if(!text){ toast('내용을 입력하세요.'); return; }
-    await updateDoc(doc(db,'comments',postId), { text, updatedAt: new Date() });
+    await updateDoc(doc(db,'comments',postId), { text, updatedAt: serverTimestamp() });
     toast('수정되었습니다.');
     window.toggleEdit(postId);
   }catch(e){
