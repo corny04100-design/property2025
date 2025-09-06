@@ -879,24 +879,37 @@ async function ensureUid(){
   sel.addEventListener('change', ()=>{ SORT_MODE = sel.value; window.renderCommentList?.(); });
 })();
 
-/* ✅ 작성창은 항상 사용 가능(누구나 작성) */
+/* ✅ 작성창은 항상 사용 가능(누구나 작성) + '관리자 전용' 문구 강제 제거 */
 function enableComposerForAll(){
   const input = $('코멘트입력');
   const btn   = document.querySelector('#section-inquiry .board-head button.btn.btn-calc');
   if(!input || !btn) return;
+
+  // 항상 사용 가능
   input.removeAttribute('disabled'); input.style.opacity='';
-  // placeholder 복구(관리자 전용 문구 제거)
-  if (input.placeholder?.includes('관리자 전용')) {
-    input.placeholder = '코멘트를 남겨주세요. (40자 이내)';
-  }
   btn.disabled=false; btn.title='등록'; btn.style.opacity='';
+
+  // placeholder를 항상 기본 문구로 강제 설정
+  input.placeholder = '코멘트를 남겨주세요. (40자 이내)';
+
+  // 혹시 남아있을 수 있는 '관리자 전용' 안내 텍스트 제거
+  const section = document.querySelector('#section-inquiry');
+  if(section){
+    [...section.querySelectorAll('*')].forEach(node=>{
+      node.childNodes && node.childNodes.forEach(c=>{
+        if(c.nodeType===3 && /관리자\s*전용|관리자만\s*작성/.test(c.nodeValue)){
+          c.nodeValue = c.nodeValue.replace(/관리자\s*전용|관리자만\s*작성/g,'');
+        }
+      });
+    });
+  }
 }
 
 /* ========== 6) Auth ========== */
 onAuthStateChanged(auth, (user)=>{
   CURRENT_UID = user?.uid || null;
   IS_ADMIN    = isAdminUser(user);
-  enableComposerForAll();          // ✅ 항상 활성화
+  enableComposerForAll();          // ✅ 항상 활성화 + 문구 제거
   window.renderCommentList?.(true);
 });
 
