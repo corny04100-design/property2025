@@ -10,7 +10,7 @@ const toAbs = (path) => new URL(path, self.location).toString();
 // 오프라인 기본 제공 파일(최소 구성)
 const CORE_FILES = [
   toAbs('index.html'),
-  toAbs('manifest.webmanifest?v=5'),
+  toAbs('manifest.webmanifest?v=7'),
   toAbs('icon-192-v2.png'),
   toAbs('icon-512-v2.png'),
 ];
