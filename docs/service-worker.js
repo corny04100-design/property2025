@@ -6,8 +6,8 @@ const RUNTIME_CACHE = 'runtime-v8';
 const PRECACHE_URLS = [
   './',
   './index.html',
-  './icon-192-v2.png',
-  './icon-512-v2.png',
+  './icon-192-v3.png',
+  './icon-512-v3.png',
 ];
 
 // 설치: 핵심 파일 프리캐시
