@@ -31,7 +31,7 @@
 
   "shortcuts": [
     {
-      "name": "계산하기",
+      "name": "계산",
       "short_name": "계산",
       "url": "./index.html#section-input",
       "icons": [{ "src": "icon-192-v3.png", "sizes": "192x192" }]
