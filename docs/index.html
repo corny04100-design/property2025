@@ -46,14 +46,6 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
 .ico-badge.green{background:#eaf7ee;border-color:#cfe8d8}
 .ico-badge.red{background:#fdecec;border-color:#f4c6c6}
 
-/* PIN 우측 정렬 */
-.admin-mini{display:flex;align-items:center;gap:6px;margin-left:auto}
-.pin-label{font-size:10px;color:#6b7280;letter-spacing:.2px}
-.input-pin{width:90px;height:22px;padding:2px 6px;font-size:10px;border:1px solid var(--line);border-radius:8px;background:transparent;color:inherit;text-align:center}
-.btn-ghost-mini{display:inline-flex;align-items:center;gap:4px;padding:3px 5px;border-radius:6px;border:1px solid var(--line);background:transparent;color:#6b7280;font-size:8px;font-weight:700;opacity:.7;cursor:pointer;white-space:nowrap}
-.btn-ghost-mini .ico-mini{font-size:12px;opacity:.5;line-height:1;color:#cbd5e1}
-.btn-ghost-mini:hover{opacity:.9}
-
 /* Layout */
 .wrap{max-width:1100px;margin:20px auto 90px;padding:0 16px}
 .title{font-size:16.8px;font-weight:800;margin:12px 0 4px}
@@ -169,7 +161,6 @@ tfoot th.big{font-size:15.2px}
 /* Notes & tips */
 .warn{color:#d92d20;font-size:12px;margin-top:8px;line-height:1.4;text-align:right}
 .warn b{font-weight:700}
-#warnCapNote{display:none!important}
 .info-table td{white-space:normal;overflow:visible;text-overflow:clip}
 .micro{font-size:75%}
 .tiny{font-size:80%}
@@ -178,24 +169,6 @@ tfoot th.big{font-size:15.2px}
 .tips .ico-info{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:#eef3ff;border:1px solid #cdd9ff;color:#2c58ff;font-size:16px;font-weight:800;line-height:1}
 .tips .small-2{color:#2c58ff;font-size:80%}
 .sub-advice{display:inline-block;color:#d92d20;font-size:85%;margin-left:8px;white-space:nowrap}
-
-/* Inquiry (50%) */
-#section-inquiry{font-size:50%}
-.board-head{display:flex;align-items:flex-end;gap:8px;flex-wrap:nowrap}
-.input-line{flex:1;min-width:0}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:999px;font-size:10px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;white-space:nowrap}
-.post-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px;margin-top:8px;}
-.post-row{display:flex;justify-content:space-between;gap:10px}
-.post-text{white-space:pre-wrap;overflow-wrap:break-word;font-size:12px;}
-.post-meta{font-size:10px;color:#6b7280;white-space:nowrap}
-.post-actions{display:flex;gap:4px;align-items:center;flex-wrap:nowrap;margin-top:6px}
-.btn-mini{display:inline-flex;align-items:center;gap:4px;padding:4px 6px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-size:8px;cursor:pointer;white-space:nowrap}
-.btn-mini:hover{filter:brightness(0.98)}
-.comment{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:6px;margin-top:6px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.comment .meta{font-size:10px;color:#6b7280;margin-bottom:2px}
-
-/* Char counter 위치 보정 */
-.char-count{font-size:10px;color:#6b7280;text-align:right;margin-top:4px;position:relative;left:-30% !important}
 
 /* Tabbar & Toast */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card);border-top:1px solid var(--line)}
@@ -220,7 +193,7 @@ tfoot th.big{font-size:15.2px}
   .title{font-size:18pt;margin-bottom:6px}
   .subtitle{font-size:11pt;margin-bottom:8px}
   .actions,.btn,.btn-lookup,.appbar,.tabbar,.toast{display:none !important}
-  .tips-pay,#section-inquiry{display:none !important}
+  .tips-pay{display:none !important}
 }
 
 /* 버튼 배경 색상(주택공시가격=초록, 지방세법=빨강, 위택스=옅은 갈색) */
@@ -230,9 +203,6 @@ tfoot th.big{font-size:15.2px}
 .app-actions a[onclick^="openLookupNew"]:hover,
 .app-actions a[href*="law.go.kr"]:hover,
 .app-actions a[href*="wetax.go.kr"]:hover{filter:brightness(1.03);} 
-
-/* 🔒 공개 정책: 비공개 스위치 숨김 */
-#section-inquiry .switch{display:none !important}
 </style>
 </head>
 <body>
@@ -273,15 +243,6 @@ tfoot th.big{font-size:15.2px}
       </a>
 
       <button id="install" type="button">앱 설치</button>
-    </div>
-
-    <!-- 오른쪽 관리자 전환 -->
-    <div class="admin-mini">
-      <label for="adminPin" class="pin-label">PIN</label>
-      <input id="adminPin" class="input-pin" type="password" placeholder="****" />
-      <button class="btn-ghost-mini" type="button" onclick="toggleAdmin()" title="관리자 전환" aria-label="관리자 전환">
-        <span class="ico-mini">🔁</span>
-      </button>
     </div>
   </div>
 </header>
@@ -400,21 +361,6 @@ tfoot th.big{font-size:15.2px}
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- 한줄 코멘트 -->
-    <div class="card" id="section-inquiry">
-      <div class="header-row"><h2>3. 한줄 코멘트</h2><div class="char-count header-counter"><span id="코멘트카운트">0</span>/40</div></div>
-      <div class="board-head">
-        <div class="input-line">
-          <input id="코멘트입력" class="input-line" type="text" maxlength="40" placeholder="코멘트를 남겨주세요. (40자 이내)" />
-        </div>
-        <div class="switch">
-          <input id="비공개체크" type="checkbox"><label for="비공개체크">비공개</label>
-        </div>
-        <button class="btn btn-calc" type="button" onclick="createLine()">등록</button>
-      </div>
-      <div id="commentList" style="margin-top:8px"></div>
     </div>
   </div>
 </div>
@@ -573,163 +519,6 @@ function openPrint(){
     window.print();
   }
 }
-
-/* 초기 UI */
-document.addEventListener('DOMContentLoaded',()=>{
-  ['전년_재산세액','전년_도시지역분'].forEach(id=>{
-    $(id)?.addEventListener('input',()=>{});
-  });
-  const ci=$('코멘트입력');
-  if(ci){
-    ci.addEventListener('input',()=>{
-      const MAX=40;
-      if(ci.value.length>MAX){ci.value=ci.value.slice(0,MAX);}
-      const cnt=$('코멘트카운트'); if(cnt) cnt.textContent=ci.value.length;
-    });
-    const cnt=$('코멘트카운트'); if(cnt) cnt.textContent=ci.value.length||0;
-  }
-});
-</script>
-
-<!-- 🔥 Firebase (CDN / ES Module) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDx2-rk1FBsRIbXhEVz2GCxp-N_5v6v9uo",
-    authDomain: "propertytax-2025.firebaseapp.com",
-    projectId: "propertytax-2025",
-    storageBucket: "propertytax-2025.firebasestorage.app",
-    messagingSenderId: "837197485676",
-    appId: "1:837197485676:web:a256db7e6dd0188a036a49",
-    measurementId: "G-N8QV30BCFZ"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  /* ✅ 관리자 이메일 화이트리스트(소문자 비교) */
-  const ADMIN_EMAILS = ["kor7@kakao.com"].map(s => s.toLowerCase());
-  const isAdminUser = (user) => !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
-
-  /* 공통 유틸(모듈 로컬) */
-  const $ = (id) => document.getElementById(id);
-  const toast = (msg)=>{const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);}
-  const escapeHTML = (s)=> String(s).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[m]));
-
-  /* 익명 로그인 시도(모두 쓰기 허용 전제 규칙과 매칭) */
-  signInAnonymously(auth).catch(()=>{});
-
-  let READY=false, IS_ADMIN=false, unsubscribe=null;
-
-  function updateAdminUI(){
-    const pinLabel=document.querySelector('.pin-label');
-    if(pinLabel) pinLabel.textContent = IS_ADMIN ? 'ADMIN' : 'PIN';
-  }
-
-  onAuthStateChanged(auth, (user)=>{
-    READY=!!user;
-    IS_ADMIN=isAdminUser(user);
-    updateAdminUI();
-    window.renderCommentList?.();
-  });
-
-  /* 🔐 관리자 토글(상단 🔁 버튼) */
-  window.toggleAdmin = async function toggleAdmin(){
-    try{
-      if(IS_ADMIN){ await signOut(auth); toast('관리자 로그아웃'); return; }
-      const email = prompt('관리자 이메일');
-      const pw    = prompt('비밀번호');
-      if(!email || !pw){ toast('이메일/비밀번호가 필요합니다.'); return; }
-      await signInWithEmailAndPassword(auth, email, pw);
-      IS_ADMIN = isAdminUser(auth.currentUser);
-      updateAdminUI();
-      window.renderCommentList?.();
-      toast('관리자 로그인 성공');
-    }catch(e){ console.error('[admin login]', e); toast('로그인 실패: ' + (e?.code||e?.message||'오류')); }
-  }
-
-  /* 📝 등록: createdAt을 new Date()로 저장 */
-  window.createLine = async function createLine(){
-    try{
-      if(!READY){ toast('잠시 후 다시 시도하세요. (로그인 준비 중)'); return; }
-      const input=$('코멘트입력');
-      const raw=(input?.value||'').trim();
-      if(!raw){ toast('코멘트를 입력하세요.'); return; }
-      const text=raw.slice(0,40);
-      await addDoc(collection(db,'comments'), { text, createdAt: new Date() });
-      if(input) input.value=''; const cnt=$('코멘트카운트'); if(cnt) cnt.textContent='0';
-      toast('등록되었습니다.');
-    }catch(e){
-      console.error('[createLine] 실패:', e);
-      const code=e?.code||'';
-      if(code.includes('permission')||code.includes('denied')) toast('등록 실패: Firestore 규칙 거부(permission-denied)');
-      else if(code.includes('auth')) toast('등록 실패: 인증 문제. 익명 로그인/도메인 허용 확인');
-      else if(code.includes('unavailable')||code.includes('network')) toast('등록 실패: 네트워크/서버 문제');
-      else toast('등록 실패: '+(e?.message||'알 수 없는 오류'));
-    }
-  }
-
-  /* 📜 목록/리렌더: 관리자에겐 수정/삭제 UI 제공 */
-  window.renderCommentList = function renderCommentList(){
-    const el=$('commentList'); if(!el) return;
-    if(unsubscribe){ unsubscribe(); unsubscribe=null; }
-    const q = query(collection(db,'comments'), orderBy('createdAt','desc'));
-    unsubscribe = window.firebaseUnsub = onSnapshot(q, (snap)=>{
-      const posts=snap.docs.map(d=>({id:d.id, ...d.data()}));
-      if(!posts.length){ el.innerHTML=''; return; }
-      const html=posts.map(p=>{
-        let ts;
-        if(p.createdAt?.toDate){ ts = p.createdAt.toDate(); }
-        else if(typeof p.createdAt?.seconds === 'number'){ ts = new Date(p.createdAt.seconds*1000); }
-        else { ts = new Date(); }
-        const z=n=>String(n).padStart(2,'0');
-        const createdAt=`${ts.getFullYear()}-${z(ts.getMonth()+1)}-${z(ts.getDate())} ${z(ts.getHours())}:${z(ts.getMinutes())}`;
-        const adminBox = IS_ADMIN ? `
-          <div class="post-actions">
-            <textarea id="edit_${p.id}" style="width:100%;min-height:72px">${escapeHTML(p.text||'')}</textarea>
-            <div>
-              <button class="btn-mini" type="button" onclick="updatePost('${p.id}')">✏️ 수정</button>
-              <button class="btn-mini" type="button" onclick="deletePostDb('${p.id}')">🗑️ 삭제</button>
-            </div>
-          </div>` : '';
-        return `
-          <div class="post-card">
-            <div class="post-row">
-              <div class="post-text">${escapeHTML(p.text||'')}</div>
-              <div class="post-meta">${createdAt}</div>
-            </div>
-            ${adminBox}
-          </div>`;
-      }).join('');
-      el.innerHTML=html;
-    });
-  }
-
-  /* ✏️ 수정: updatedAt을 new Date()로 저장 */
-  window.updatePost = async function updatePost(postId){
-    try{
-      if(!IS_ADMIN){ toast('관리자만 수정할 수 있습니다.'); return; }
-      const ta=$('edit_'+postId);
-      const text=(ta?.value||'').trim().slice(0,40);
-      if(!text){ toast('내용을 입력하세요.'); return; }
-      await updateDoc(doc(db,'comments',postId), { text, updatedAt: new Date() });
-      toast('수정되었습니다.');
-    }catch(e){ console.error('[updatePost]',e); toast('수정 실패: '+(e?.code||e?.message||'오류')); }
-  }
-
-  /* 🗑️ 삭제 */
-  window.deletePostDb = async function deletePostDb(postId){
-    try{
-      if(!IS_ADMIN){ toast('관리자만 삭제할 수 있습니다.'); return; }
-      if(!confirm('삭제할까요?')) return;
-      await deleteDoc(doc(db,'comments',postId));
-      toast('삭제했습니다.');
-    }catch(e){ console.error('[deletePostDb]',e); toast('삭제 실패: '+(e?.code||e?.message||'오류')); }
-  }
 </script>
 
 <!-- PWA: 서비스워커 등록 + 설치 버튼 (자동 업데이트 반영) -->
