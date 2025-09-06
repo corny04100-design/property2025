@@ -1,7 +1,7 @@
 // service-worker.js
 // ✅ 배포할 때마다 CACHE_VERSION만 바꾸면 정적 리소스 캐시가 교체됩니다.
 //    HTML은 네트워크 우선이므로 버전 안 올려도 최신이 반영됩니다.
-const CACHE_VERSION = 'pwa-cache-v6';
+const CACHE_VERSION = 'pwa-cache-v7';
 const CACHE_NAME = `ptax-2025-${CACHE_VERSION}`;
 
 // 스코프 기준 절대 URL 생성 (GitHub Pages 하위경로에서도 안전)
