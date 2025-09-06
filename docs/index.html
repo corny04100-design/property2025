@@ -786,18 +786,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   if (isStandalone && btn) btn.style.display = 'none';
 })();
 </script>
-<!-- ✅ Comment/Reply/Edit/Like Patch (NO 'only mine' filter). Paste this right before </body> -->
+<!-- ✅ Comment/Reply/Edit Patch (no likes, author-only edit/delete). Paste right before </body> -->
 <script type="module">
-/* ========== 1) CSS 주입 (댓글/대댓글 UI) ========== */
-const __PATCH_STYLE_ID__ = "comment-reply-patch-style";
+/* ========== 1) CSS 주입 (댓글/대댓글 최소 UI) ========== */
+const __PATCH_STYLE_ID__ = "comment-reply-patch-style-no-like";
 if (!document.getElementById(__PATCH_STYLE_ID__)) {
   const style = document.createElement("style");
   style.id = __PATCH_STYLE_ID__;
   style.textContent = `
-/* ▼ 댓글/대댓글 UI (추가) */
-.controls{display:flex;align-items:center;gap:6px;margin-left:6px}
-.mini-select{height:30px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;font-size:10px;color:#334155}
-.count-inline{font-size:10px;color:#6b7280;margin-left:6px;white-space:nowrap}
 .reply-card{margin-left:12px;border-left:2px solid #e5e7eb;padding-left:8px;background:#fbfbfb}
 .reply-form{display:flex;gap:6px;align-items:center;margin-top:6px}
 .reply-form input{flex:1;min-width:0;height:30px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px}
@@ -805,12 +801,14 @@ if (!document.getElementById(__PATCH_STYLE_ID__)) {
 .edit-box textarea{width:100%;min-height:72px;border:1px solid #e5e7eb;border-radius:8px;padding:8px}
 .action-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .self-chip{display:inline-flex;align-items:center;gap:4px;border:1px solid #e5e7eb;background:#f1f5f9;color:#0b1220;border-radius:999px;padding:1px 6px;font-size:10px}
-.like-count{font-size:10px;color:#6b7280}
-  `.trim();
+.controls{display:flex;align-items:center;gap:6px;margin-left:6px}
+.mini-select{height:30px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;font-size:10px;color:#334155}
+.count-inline{font-size:10px;color:#6b7280;margin-left:6px;white-space:nowrap}
+`.trim();
   document.head.appendChild(style);
 }
 
-/* ========== 2) Firebase 모듈 접근 (기존 앱 재사용) ========== */
+/* ========== 2) Firebase 모듈 (기존 앱 재사용) ========== */
 import { getApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, query, orderBy, onSnapshot,
@@ -818,59 +816,75 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-const app = getApp();                 // ✅ 기존 initializeApp 재사용
+const app = getApp();                 // ✅ 이미 초기화된 앱 재사용
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* ========== 3) 유틸 & 상태 ========== */
+/* ========== 3) 유틸 ========== */
 const $ = (id) => document.getElementById(id);
 const escapeHTML = (s)=> String(s).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[m]));
-const toast = (msg)=>{
-  const t = $('toast'); if(!t) return;
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toast._timer); toast._timer = setTimeout(()=>t.classList.remove('show'),1500);
-};
+const toast = (msg)=> (window.toast ? window.toast(msg) : (console.log('[toast]', msg)));
 
-let READY=false, IS_ADMIN=false, CURRENT_UID=null, unsubscribe=null;
-let postsCache=[], SORT_MODE='latest';             // ✅ 정렬만 남김(인기/최신/오래된)
+/* ========== 4) 상태 ========== */
+let READY=false, CURRENT_UID=null, unsubscribe=null;
+let postsCache=[], SORT_MODE='latest'; // 최신/오래된만 사용
 
-/* 관리자 판별(화이트리스트는 기존 코드와 동일값으로 재사용 가능) */
-const ADMIN_EMAILS = ["kor7@kakao.com"].map(s => s.toLowerCase());
-const isAdminUser = (user) => !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
-function updateAdminUI(){ const pin=document.querySelector('.pin-label'); if(pin) pin.textContent = IS_ADMIN ? 'ADMIN' : 'PIN'; }
-function canEditDelete(p){ const au = p?.authorId || null; return !!(IS_ADMIN || (CURRENT_UID && au && CURRENT_UID===au)); }
+/* 작성자 본인만 수정/삭제 허용 */
+function canEditDelete(p){
+  const au = p?.authorId || null;
+  return !!(CURRENT_UID && au && CURRENT_UID===au);
+}
 
-/* ========== 4) 상단 컨트롤 UI 주입(“내 코멘트만” 제거) ========== */
-function ensureControls(){
+/* ========== 5) 상단 컨트롤 정리 (인기/내 코멘트만 제거) ========== */
+(function ensureControls(){
   const head = document.querySelector('#section-inquiry .board-head');
   if(!head) return;
-  if(head.querySelector('#commentSort')) return; // 이미 주입됨
-  const el = document.createElement('div');
-  el.className = 'controls';
-  el.innerHTML = `
-    <select id="commentSort" class="mini-select" title="정렬">
-      <option value="latest" selected>최신순</option>
-      <option value="top">인기순</option>
-      <option value="oldest">오래된순</option>
-    </select>
-    <span class="count-inline"><span id="commentTotal">0</span>건</span>
-  `;
-  const priv = head.querySelector('.switch');       // 비공개 스위치 앞에 삽입
-  head.insertBefore(el, priv || head.lastElementChild);
-}
-ensureControls();
 
-/* ========== 5) Auth 연결 ========== */
+  // "내 코멘트만" 체크박스 제거
+  const onlyMine = document.getElementById('onlyMine');
+  if (onlyMine) {
+    const label = onlyMine.closest('label');
+    (label || onlyMine).remove();
+  }
+
+  // 정렬 select 없으면 생성, 있으면 '인기순' 옵션 제거
+  let sel = document.getElementById('commentSort');
+  if (!sel) {
+    const ctrl = document.createElement('div');
+    ctrl.className = 'controls';
+    ctrl.innerHTML = `
+      <select id="commentSort" class="mini-select" title="정렬">
+        <option value="latest" selected>최신순</option>
+        <option value="oldest">오래된순</option>
+      </select>
+      <span class="count-inline"><span id="commentTotal">0</span>건</span>`;
+    const priv = head.querySelector('.switch');
+    head.insertBefore(ctrl, priv || head.lastElementChild);
+    sel = ctrl.querySelector('#commentSort');
+  } else {
+    // 'top' 옵션 제거
+    [...sel.options].forEach(opt => { if (opt.value==='top') opt.remove(); });
+    if (sel.value==='top') sel.value='latest';
+    // 건수 표시 없으면 추가
+    if (!document.getElementById('commentTotal')) {
+      const span = document.createElement('span');
+      span.className='count-inline';
+      span.innerHTML = `<span id="commentTotal">0</span>건`;
+      sel.parentElement?.appendChild(span);
+    }
+  }
+  sel.addEventListener('change', ()=>{ SORT_MODE = sel.value; window.renderCommentList?.(); });
+})();
+
+/* ========== 6) Auth ========== */
 onAuthStateChanged(auth, (user)=>{
   READY = !!user;
-  IS_ADMIN = isAdminUser(user);
   CURRENT_UID = user?.uid || null;
-  updateAdminUI();
   window.renderCommentList?.(true);
 });
 
-/* ========== 6) 코멘트 작성/댓글/수정/삭제/좋아요 구현 ========== */
-// 최상위 코멘트 등록 (버튼 onclick="createLine()" 연결됨)
+/* ========== 7) 액션들 ========== */
+// 최상위 코멘트 등록 (기존 버튼 onclick="createLine()" 연결됨)
 window.createLine = async function createLine(){
   try{
     if(!READY){ toast('잠시 후 다시 시도하세요. (로그인 준비 중)'); return; }
@@ -879,7 +893,7 @@ window.createLine = async function createLine(){
     if(!raw){ toast('코멘트를 입력하세요.'); return; }
     const text=raw.slice(0,40);
     await addDoc(collection(db,'comments'), {
-      text, createdAt: new Date(), authorId: auth.currentUser?.uid || null, parentId: null, likes: 0
+      text, createdAt: new Date(), authorId: auth.currentUser?.uid || null, parentId: null
     });
     if(input) input.value=''; const cnt=$('코멘트카운트'); if(cnt) cnt.textContent='0';
     toast('등록되었습니다.');
@@ -894,7 +908,7 @@ window.toggleReplyForm = function toggleReplyForm(parentId){
   if(el.style.display==='flex') $('reply_input_'+parentId)?.focus();
 };
 
-// 대댓글 등록
+// 대댓글 등록 (누구나 가능)
 window.createReply = async function createReply(parentId){
   try{
     if(!READY){ toast('잠시 후 다시 시도하세요. (로그인 준비 중)'); return; }
@@ -903,23 +917,27 @@ window.createReply = async function createReply(parentId){
     if(!raw){ toast('댓글을 입력하세요.'); return; }
     const text=raw.slice(0,40);
     await addDoc(collection(db,'comments'), {
-      text, createdAt: new Date(), authorId: auth.currentUser?.uid || null, parentId, likes: 0
+      text, createdAt: new Date(), authorId: auth.currentUser?.uid || null, parentId
     });
     if(input) input.value='';
     toast('댓글이 등록되었습니다.');
   }catch(e){ console.error('[createReply]', e); toast('댓글 등록 실패: '+(e?.code||e?.message||'오류')); }
 };
 
-// 수정 토글
+// 수정 폼 토글 (표시는 자유, 저장 권한은 서버 기록 기준 author만)
 window.toggleEdit = function toggleEdit(postId){
   const box = $('editbox_'+postId);
   if(!box) return;
   box.style.display = (box.style.display==='none' || !box.style.display) ? 'block' : 'none';
 };
 
-// 수정 저장
+// 수정 저장 (작성자만)
 window.saveEdit = async function saveEdit(postId){
   try{
+    // 저장 버튼 자체는 렌더 단계에서 author에게만 보이지만, 추가 방어
+    const p = postsCache.find(x=>x.id===postId);
+    if(!canEditDelete(p)){ toast('본인만 수정할 수 있습니다.'); return; }
+
     const ta=$('edit_'+postId);
     const text=(ta?.value||'').trim().slice(0,40);
     if(!text){ toast('내용을 입력하세요.'); return; }
@@ -929,44 +947,18 @@ window.saveEdit = async function saveEdit(postId){
   }catch(e){ console.error('[saveEdit]',e); toast('수정 실패: '+(e?.code||e?.message||'오류')); }
 };
 
-// 삭제
+// 삭제 (작성자만)
 window.deletePostDb = async function deletePostDb(postId){
   try{
+    const p = postsCache.find(x=>x.id===postId);
+    if(!canEditDelete(p)){ toast('본인만 삭제할 수 있습니다.'); return; }
     if(!confirm('삭제할까요?')) return;
     await deleteDoc(doc(db,'comments',postId));
     toast('삭제했습니다.');
   }catch(e){ console.error('[deletePostDb]',e); toast('삭제 실패: '+(e?.code||e?.message||'오류')); }
 };
 
-// 좋아요 (increment import 없이, 캐시값 기반 +1)
-window.likePost = async function likePost(postId){
-  try{
-    const cur = postsCache.find(x=>x.id===postId);
-    const nextLikes = (cur?.likes || 0) + 1;
-    await updateDoc(doc(db,'comments',postId), { likes: nextLikes });
-  }catch(e){ console.error('[likePost]',e); toast('처리 실패: '+(e?.code||e?.message||'오류')); }
-};
-
-// 답글 접기/펼치기
-window.toggleReplies = function toggleReplies(parentId){
-  const box = $('replies_'+parentId);
-  if(!box) return;
-  const btn = $('toggleRepliesBtn_'+parentId);
-  const nowHidden = (box.style.display==='none');
-  box.style.display = nowHidden ? 'block' : 'none';
-  if(btn) btn.textContent = nowHidden ? '답글 접기' : '답글 펼치기';
-};
-
-/* ========== 7) 목록 렌더 (정렬: 최신/인기/오래된) ========== */
-function fmtTS(ts){
-  let d;
-  if(ts?.toDate){ d = ts.toDate(); }
-  else if(typeof ts?.seconds === 'number'){ d = new Date(ts.seconds*1000); }
-  else { d = new Date(ts || Date.now()); }
-  const z=n=>String(n).padStart(2,'0');
-  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
-}
-
+/* ========== 8) 목록 구독/렌더 ========== */
 window.renderCommentList = function renderCommentList(forceResubscribe=false){
   const el=$('commentList'); if(!el) return;
 
@@ -974,11 +966,29 @@ window.renderCommentList = function renderCommentList(forceResubscribe=false){
     if(unsubscribe){ unsubscribe(); unsubscribe=null; }
     const qy = query(collection(db,'comments'), orderBy('createdAt','desc'));
     unsubscribe = onSnapshot(qy, (snap)=>{
-      postsCache = snap.docs.map(d=>({ id:d.id, likes:0, parentId:null, authorId:null, ...d.data() }));
+      postsCache = snap.docs.map(d=>({ id:d.id, parentId:null, authorId:null, ...d.data() }));
       draw();
+    }, (err)=>{
+      console.error('[onSnapshot]', err);
+      el.innerHTML = `<div class="comment">읽기 오류: ${(err?.message||'').replace(/</g,'&lt;')}</div>`;
+      toast('댓글을 불러오는 중 오류가 발생했습니다.');
     });
   }
   draw();
+
+  function tsNum(ts){
+    try{
+      if(ts?.toMillis) return ts.toMillis();
+      if(typeof ts?.seconds==='number') return ts.seconds*1000;
+      const d = new Date(ts || Date.now());
+      return isNaN(+d) ? Date.now() : +d;
+    }catch{ return Date.now(); }
+  }
+  function fmtTS(ts){
+    const n = tsNum(ts), d = new Date(n);
+    const z=n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+  }
 
   function draw(){
     const countEl=$('commentTotal');
@@ -993,14 +1003,10 @@ window.renderCommentList = function renderCommentList(forceResubscribe=false){
     });
     let roots = postsCache.filter(p=>!p.parentId);
 
-    // 정렬
-    if(SORT_MODE==='top'){
-      roots.sort((a,b)=> (b.likes||0)-(a.likes||0) ||
-        (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
-    }else if(SORT_MODE==='oldest'){
-      roots.sort((a,b)=> new Date(a.createdAt?.seconds? a.createdAt.seconds*1000 : a.createdAt) -
-                         new Date(b.createdAt?.seconds? b.createdAt.seconds*1000 : b.createdAt));
-    } // 기본 최신순: 스냅샷 정렬 유지
+    // 정렬(최신/오래된)
+    if(SORT_MODE==='oldest'){
+      roots.sort((a,b)=> tsNum(a.createdAt) - tsNum(b.createdAt));
+    } // 기본 최신순은 스냅샷 정렬 유지
 
     if(countEl) countEl.textContent = String(roots.length);
     if(!roots.length){ el.innerHTML=''; return; }
@@ -1012,20 +1018,17 @@ window.renderCommentList = function renderCommentList(forceResubscribe=false){
       const mine = (CURRENT_UID && p.authorId===CURRENT_UID);
       const canED = canEditDelete(p);
       const replies = (childrenMap.get(p.id) || [])
-        .sort((a,b)=> new Date(a.createdAt?.seconds? a.createdAt.seconds*1000 : a.createdAt) -
-                      new Date(b.createdAt?.seconds? b.createdAt.seconds*1000 : b.createdAt));
+        .sort((a,b)=> tsNum(a.createdAt) - tsNum(b.createdAt));
       const replyCount = replies.length;
       const selfChip = mine ? `<span class="self-chip">나</span>` : '';
       const cardCls = isReply ? 'post-card reply-card' : 'post-card';
 
       const actions = `
         <div class="action-row">
-          <button class="btn-mini" type="button" onclick="likePost('${p.id}')">👍 좋아요</button>
-          <span class="like-count" id="like_count_${p.id}">${p.likes||0}</span>
           <button class="btn-mini" type="button" onclick="toggleReplyForm('${p.id}')">💬 댓글</button>
           ${canED ? `<button class="btn-mini" type="button" onclick="toggleEdit('${p.id}')">✏️ 수정</button>` : ''}
           ${canED ? `<button class="btn-mini" type="button" onclick="deletePostDb('${p.id}')">🗑️ 삭제</button>` : ''}
-          ${!isReply && replyCount>0 ? `<button class="btn-mini" id="toggleRepliesBtn_${p.id}" type="button" onclick="toggleReplies('${p.id}')">답글 접기</button>` : ''}
+          ${!isReply && replyCount>0 ? `<button class="btn-mini" id="toggleRepliesBtn_${p.id}" type="button" onclick="(function(btn){const box=document.getElementById('replies_${p.id}'); const hide=(box.style.display==='none'); box.style.display=hide?'block':'none'; btn.textContent = hide?'답글 접기':'답글 펼치기';})(this)">답글 접기</button>` : ''}
         </div>`;
 
       const editBox = `
@@ -1058,17 +1061,21 @@ window.renderCommentList = function renderCommentList(forceResubscribe=false){
         </div>`;
     }
   }
-}
+};
 
-/* ========== 8) 정렬 이벤트 바인딩 ========== */
-document.addEventListener('change', (e)=>{
-  if(e.target && e.target.id==='commentSort'){
-    SORT_MODE = e.target.value;
-    window.renderCommentList?.();
-  }
-});
+/* ========== 9) 간단 자가 테스트 (권한 로직) ========== */
+(function runSelfTests(){
+  try{
+    const A = {authorId: 'u1'}, B = {authorId: 'u2'};
+    CURRENT_UID = 'u1';
+    console.assert(canEditDelete(A)===true,  'author can edit/delete (A)');
+    console.assert(canEditDelete(B)===false, 'non-author cannot edit/delete (B)');
+    // CURRENT_UID를 원래 상태로 복원 (Auth 콜백이 다시 그려줌)
+    CURRENT_UID = auth.currentUser?.uid || null;
+  }catch(e){ console.warn('[selftest]', e); }
+})();
 
-/* 초기 호출 */
+/* 초기 렌더 */
 window.renderCommentList?.(true);
 </script>
 </body>
