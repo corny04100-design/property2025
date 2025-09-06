@@ -41,7 +41,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
 .ico-printer{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
 .ico-printer svg{width:100%;height:100%}
 .ico-printer .st{fill:none;stroke:var(--icon);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-<!-- Icon badge (optional) -->
+/* Icon badge (optional) */
 .ico-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;border:1px solid var(--line);font-size:12px;line-height:1}
 .ico-badge.green{background:#eaf7ee;border-color:#cfe8d8}
 .ico-badge.red{background:#fdecec;border-color:#f4c6c6}
@@ -58,7 +58,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
 .wrap{max-width:1100px;margin:20px auto 90px;padding:0 16px}
 .title{font-size:16.8px;font-weight:800;margin:12px 0 4px}
 .subtitle{font-size:12px;color:#2c58ff;margin-bottom:14px}
-.subtitle .danger{color:var(--warn);font-weight:700}
+.subtitle .danger{color:#d92d20;font-weight:700}
 .grid{display:grid;grid-template-columns:1fr;gap:18px}
 @media (min-width:960px){.grid{grid-template-columns:1.2fr 1fr}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:0 4px 12px var(--shadow)}
@@ -137,7 +137,7 @@ tfoot tr{background:var(--sum-bg);font-weight:900}
 tfoot th.big{font-size:15.2px}
 .sum-amount{font-size:14.4px !important;font-weight:900 !important;line-height:1.2}
 .sum-box{background:#ffffff;border:1px solid #cdd9ff;border-radius:12px;padding:14px 16px;margin:10px 0 12px 0;box-shadow:0 4px 10px rgba(44,88,255,.08);display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
-/* ▶ 합계 라ベル */
+/* ▶ 합계 라벨 */
 .sum-box .label{font-size:13.6px;color:#000;white-space:nowrap;letter-spacing:-0.2px;line-height:1.2;font-weight:700}
 .sum-box .value{font-size:14.4px;font-weight:900}
 
@@ -223,11 +223,13 @@ tfoot th.big{font-size:15.2px}
   .tips-pay,#section-inquiry{display:none !important}
 }
 
-/* 버튼 배경 색상(주택공시가격=초록, 지방세법=빨강) */
+/* 버튼 배경 색상(주택공시가격=초록, 지방세법=빨강, 위택스=옅은 갈색) */
 .app-actions a[onclick^="openLookupNew"]{background:#eaf7ee;border-color:#cfe8d8;}
 .app-actions a[href*="law.go.kr"]{background:#fdecec;border-color:#f4c6c6;}
+.app-actions a[href*="wetax.go.kr"]{background:#f5eee6;border-color:#e5d9c7;}
 .app-actions a[onclick^="openLookupNew"]:hover,
-.app-actions a[href*="law.go.kr"]:hover{filter:brightness(1.03);} 
+.app-actions a[href*="law.go.kr"]:hover,
+.app-actions a[href*="wetax.go.kr"]:hover{filter:brightness(1.03);} 
 
 /* 🔒 공개 정책: 비공개 스위치 숨김 */
 #section-inquiry .switch{display:none !important}
@@ -262,6 +264,12 @@ tfoot th.big{font-size:15.2px}
       </a>
       <a class="icon-btn lg" target="_blank" href="https://www.law.go.kr/LSW/lsSc.do?query=%EC%A7%80%EB%B0%A9%EC%84%B8%EB%B2%95" rel="noopener">
         <span aria-hidden="true">🔍</span> 지방세법
+      </a>
+      <!-- ✅ 위택스 버튼 추가 -->
+      <a class="icon-btn lg" target="_blank"
+         href="https://www.wetax.go.kr/etq/etp/epi/E070101M01.do"
+         rel="noopener" title="위택스 지방세 납부">
+        <span aria-hidden="true">🧾</span> 위택스
       </a>
 
       <button id="install" type="button">앱 설치</button>
