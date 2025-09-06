@@ -786,10 +786,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   if (isStandalone && btn) btn.style.display = 'none';
 })();
 </script>
-<!-- 🔧 Unified Comment/Reply/Edit Patch (author+admin delete, ensure authorId) — paste right before </body> -->
+<!-- 🔧 Replies-only for non-admin; keep admin features — paste right before </body> (replace previous unified patch) -->
 <script type="module">
 /* ========== 1) CSS (댓글/대댓글 최소 UI) ========== */
-const __PATCH_STYLE_ID__ = "comment-reply-patch-style-unified";
+const __PATCH_STYLE_ID__ = "comment-reply-patch-style-replies-only";
 if (!document.getElementById(__PATCH_STYLE_ID__)) {
   const style = document.createElement("style");
   style.id = __PATCH_STYLE_ID__;
@@ -826,17 +826,13 @@ const escapeHTML = (s)=> String(s).replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&
 const toast = (msg)=> (window.toast ? window.toast(msg) : console.log('[toast]', msg));
 
 /* ========== 4) 상태 & 권한 ========== */
-let READY=false, CURRENT_UID=null, IS_ADMIN=false, unsubscribe=null;
+let CURRENT_UID=null, IS_ADMIN=false, unsubscribe=null;
 let postsCache=[], SORT_MODE='latest';
 
 const ADMIN_EMAILS = ["kor7@kakao.com"].map(s=>s.toLowerCase());
 const isAdminUser  = (user)=> !!user?.email && ADMIN_EMAILS.includes(String(user.email).toLowerCase());
 
-function canEditDelete(p){
-  const au = p?.authorId || null;
-  return !!(IS_ADMIN || (CURRENT_UID && au && CURRENT_UID===au));
-}
-
+function canAdmin(){ return !!IS_ADMIN; } // ✨ 관리자만 수정/삭제 허용
 async function ensureUid(){
   if(!auth.currentUser){
     try{ await signInAnonymously(auth); }catch(e){ /* ignore */ }
@@ -849,7 +845,7 @@ async function ensureUid(){
   const head = document.querySelector('#section-inquiry .board-head');
   if(!head) return;
 
-  // "내 코멘트만" 같은 이전 요소 제거(있으면)
+  // 이전 "내 코멘트만" 요소 제거(있으면)
   const onlyMine = document.getElementById('onlyMine');
   if (onlyMine) { const label = onlyMine.closest('label'); (label || onlyMine).remove(); }
 
@@ -881,18 +877,35 @@ async function ensureUid(){
   sel.addEventListener('change', ()=>{ SORT_MODE = sel.value; window.renderCommentList?.(); });
 })();
 
+/* ⛳ 작성창을 역할에 맞게 켜/끄기: 관리자만 최상위 코멘트 작성 허용 */
+function updateComposerForRole(){
+  const input = $('코멘트입력');
+  const btn   = document.querySelector('#section-inquiry .board-head button.btn.btn-calc');
+  if(!input || !btn) return;
+  if (canAdmin()){
+    input.removeAttribute('disabled'); input.style.opacity='';
+    input.placeholder = input.placeholder?.replace('(관리자 전용)','') || input.placeholder || '';
+    btn.disabled=false; btn.title='등록'; btn.style.opacity='';
+  } else {
+    input.value=''; input.setAttribute('disabled','disabled'); input.style.opacity='0.6';
+    input.placeholder='코멘트 작성은 관리자 전용입니다. (관리자 전용)';
+    btn.disabled=true; btn.title='관리자만 작성'; btn.style.opacity='0.5';
+  }
+}
+
 /* ========== 6) Auth ========== */
 onAuthStateChanged(auth, (user)=>{
-  READY       = !!user;
   CURRENT_UID = user?.uid || null;
   IS_ADMIN    = isAdminUser(user);
+  updateComposerForRole();
   window.renderCommentList?.(true);
 });
 
-/* ========== 7) 작성/댓글/수정/삭제 (작성자도 삭제 가능) ========== */
-// 최상위 코멘트 등록: authorId 반드시 기록
+/* ========== 7) 액션들 ========== */
+// ✅ 최상위 코멘트: 관리자만 허용 (등록 실패 방지)
 window.createLine = async function createLine(){
   try{
+    if(!canAdmin()){ toast('코멘트 작성은 관리자 전용입니다.'); return; }
     const input = $('코멘트입력');
     const raw   = (input?.value||'').trim();
     if(!raw){ toast('코멘트를 입력하세요.'); return; }
@@ -913,15 +926,13 @@ window.createLine = async function createLine(){
   }
 };
 
-// 대댓글 입력칸 토글
+// ✅ 대댓글: 누구나 가능
 window.toggleReplyForm = function toggleReplyForm(parentId){
   const el = $('replybox_'+parentId);
   if(!el) return;
   el.style.display = (el.style.display==='none' || !el.style.display) ? 'flex' : 'none';
   if(el.style.display==='flex') $('reply_input_'+parentId)?.focus();
 };
-
-// 대댓글 등록: 누구나 가능, authorId 반드시 기록
 window.createReply = async function createReply(parentId){
   try{
     const input = $('reply_input_'+parentId);
@@ -943,23 +954,19 @@ window.createReply = async function createReply(parentId){
   }
 };
 
-// 수정 폼 토글
+// ✅ 수정/삭제: 관리자만
 window.toggleEdit = function toggleEdit(postId){
+  if(!canAdmin()){ toast('관리자 전용 기능입니다.'); return; }
   const box = $('editbox_'+postId);
   if(!box) return;
   box.style.display = (box.style.display==='none' || !box.style.display) ? 'block' : 'none';
 };
-
-// 수정 저장 (작성자 또는 관리자)
 window.saveEdit = async function saveEdit(postId){
   try{
-    const p = postsCache.find(x=>x.id===postId);
-    if(!canEditDelete(p)){ toast('작성자 또는 관리자만 수정할 수 있습니다.'); return; }
-
+    if(!canAdmin()){ toast('관리자만 수정할 수 있습니다.'); return; }
     const ta=$('edit_'+postId);
     const text=(ta?.value||'').trim().slice(0,40);
     if(!text){ toast('내용을 입력하세요.'); return; }
-
     await updateDoc(doc(db,'comments',postId), { text, updatedAt: new Date() });
     toast('수정되었습니다.');
     window.toggleEdit(postId);
@@ -968,12 +975,9 @@ window.saveEdit = async function saveEdit(postId){
     toast('수정 실패: '+(e?.code||e?.message||'오류'));
   }
 };
-
-// 삭제 (작성자 또는 관리자)
 window.deletePostDb = async function deletePostDb(postId){
   try{
-    const p = postsCache.find(x=>x.id===postId);
-    if(!canEditDelete(p)){ toast('작성자 또는 관리자만 삭제할 수 있습니다.'); return; }
+    if(!canAdmin()){ toast('관리자만 삭제할 수 있습니다.'); return; }
     if(!confirm('삭제할까요?')) return;
     await deleteDoc(doc(db,'comments',postId));
     toast('삭제했습니다.');
@@ -1031,7 +1035,7 @@ window.renderCommentList = function renderCommentList(forceResubscribe=false){
     // 정렬
     if(SORT_MODE==='oldest'){
       roots.sort((a,b)=> tsNum(a.createdAt) - tsNum(b.createdAt));
-    } // 기본 최신순: 스냅샷 정렬 유지
+    } // 최신순은 스냅샷 정렬 유지
 
     if(countEl) countEl.textContent = String(roots.length);
     if(!roots.length){ el.innerHTML=''; return; }
@@ -1041,7 +1045,6 @@ window.renderCommentList = function renderCommentList(forceResubscribe=false){
 
     function renderPost(p, isReply){
       const mine   = (CURRENT_UID && p.authorId===CURRENT_UID);
-      const canED  = canEditDelete(p);
       const replies = (childrenMap.get(p.id) || [])
         .sort((a,b)=> tsNum(a.createdAt) - tsNum(b.createdAt));
       const replyCount = replies.length;
@@ -1051,8 +1054,8 @@ window.renderCommentList = function renderCommentList(forceResubscribe=false){
       const actions = `
         <div class="action-row">
           <button class="btn-mini" type="button" onclick="toggleReplyForm('${p.id}')">💬 댓글</button>
-          ${canED ? `<button class="btn-mini" type="button" onclick="toggleEdit('${p.id}')">✏️ 수정</button>` : ''}
-          ${canED ? `<button class="btn-mini" type="button" onclick="deletePostDb('${p.id}')">🗑️ 삭제</button>` : ''}
+          ${canAdmin() ? `<button class="btn-mini" type="button" onclick="toggleEdit('${p.id}')">✏️ 수정</button>` : ''}
+          ${canAdmin() ? `<button class="btn-mini" type="button" onclick="deletePostDb('${p.id}')">🗑️ 삭제</button>` : ''}
           ${!isReply && replyCount>0 ? `<button class="btn-mini" id="toggleRepliesBtn_${p.id}" type="button" onclick="(function(btn){const box=document.getElementById('replies_${p.id}'); const hide=(box.style.display==='none'); box.style.display=hide?'block':'none'; btn.textContent = hide?'답글 접기':'답글 펼치기';})(this)">답글 접기</button>` : ''}
         </div>`;
 
@@ -1080,28 +1083,13 @@ window.renderCommentList = function renderCommentList(forceResubscribe=false){
             <div class="post-meta">${fmtTS(p.createdAt)}${p.updatedAt? ' · 수정됨':''}${!isReply && replyCount? ` · 답글 ${replyCount}개`:''}</div>
           </div>
           ${actions}
-          ${editBox}
+          ${canAdmin() ? editBox : ''}   <!-- 관리자만 수정 UI 렌더 -->
           ${replyForm}
           ${!isReply ? `<div id="replies_${p.id}" style="margin-top:6px">${repliesHtml}</div>` : ''}
         </div>`;
     }
   }
 };
-
-/* ========== 9) 간단 자가 테스트(권한) ========== */
-(function runSelfTests(){
-  try{
-    const A = {authorId: 'u1'}, B = {authorId: 'u2'};
-    CURRENT_UID = 'u1'; IS_ADMIN=false;
-    console.assert(canEditDelete(A)===true,  'author can edit/delete (A)');
-    console.assert(canEditDelete(B)===false, 'non-author cannot edit/delete (B)');
-    IS_ADMIN=true;
-    console.assert(canEditDelete(B)===true,  'admin can edit/delete (B)');
-    // 복원
-    CURRENT_UID = auth.currentUser?.uid || null;
-    IS_ADMIN = isAdminUser(auth.currentUser);
-  }catch(e){ console.warn('[selftest]', e); }
-})();
 
 /* 초기 렌더 */
 window.renderCommentList?.(true);
