@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -732,12 +733,43 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 </script>
 
-<!-- PWA: 서비스워커/설치 버튼 (선택) -->
+<!-- PWA: 서비스워커 등록 + 설치 버튼 (자동 업데이트 반영) -->
 <script>
 (function(){
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+  if (!('serviceWorker' in navigator)) {
+    const btn = document.getElementById('install');
+    if (btn) btn.style.display = 'none';
+    return;
   }
+
+  // 서비스워커 등록
+  navigator.serviceWorker.register('./service-worker.js').then((reg) => {
+    // 이미 대기중인 새 SW가 있으면 즉시 활성화 요청
+    if (reg.waiting) {
+      reg.waiting.postMessage('SKIP_WAITING');
+    }
+
+    // 새 SW가 설치되면 즉시 활성화 요청
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+          sw.postMessage('SKIP_WAITING');
+        }
+      });
+    });
+
+    // 컨트롤러 변경되면 자동 새로고침(새 SW 즉시 반영)
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  }).catch(console.error);
+
+  // 앱 설치 버튼 로직
   let deferredPrompt;
   const btn = document.getElementById('install');
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -757,3 +789,4 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 </body>
 </html>
+```
