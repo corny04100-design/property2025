@@ -41,13 +41,6 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
 .ico-printer svg{width:100%;height:100%}
 .ico-printer .st{fill:none;stroke:var(--icon);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* 오른쪽 상단: 관리자 로그인 + PIN */
-.adminbar{margin-left:auto;display:flex;align-items:center;gap:8px}
-.btn-ghost-mini{display:inline-flex;align-items:center;gap:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer}
-.btn-ghost-mini:hover{filter:brightness(0.98)}
-.pin-input{width:92px;height:28px;padding:2px 8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:inherit;text-align:center;font-size:12px;letter-spacing:2px}
-.pin-label{font-size:10px;color:#6b7280}
-
 /* Layout */
 .wrap{max-width:1100px;margin:20px auto 90px;padding:0 16px}
 .title{font-size:16.8px;font-weight:800;margin:12px 0 4px}
@@ -236,13 +229,6 @@ tfoot th.big{font-size:15.2px}
 
       <button id="install" type="button">앱 설치</button>
     </div>
-
-    <!-- 🔐 우측 상단 관리자 로그인 + PIN -->
-    <div class="adminbar" aria-label="관리자 로그인 영역">
-      <button class="btn-ghost-mini" type="button" onclick="adminPinLogin()" title="관리자모드 로그인">관리자 로그인</button>
-      <label for="adminPin" class="pin-label">PIN</label>
-      <input id="adminPin" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="••••••" maxlength="6" />
-    </div>
   </div>
 </header>
 
@@ -369,22 +355,22 @@ tfoot th.big{font-size:15.2px}
         <div class="faq-list">
           <div class="faq-item">
             <div class="faq-q">① 이 계산기는 어떤 주택에 적용되나요?</div>
-            <div class="faq-a">2025년 공동주택(아파트, 연립, 빌라, 다세대)에 한해 계산을 지원합니다. 단독주택·다가구주택은 제외.</div>
+            <div class="faq-a">공동주택(아파트, 연립, 빌라, 다세대)에 한해 계산을 지원합니다. 단독주택·다가구주택은 별도 구조라 포함되지 않습니다.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q">② 납부 시기와 금액 분할은 어떻게 되나요?</div>
-            <div class="faq-a">주택분 재산세는 7월과 9월에 각각 1/2씩 부과됩니다. 화면의 “분기별(7·9월) 세액”이 이에 해당합니다.</div>
+            <div class="faq-a">주택분 재산세는 통상 7월과 9월에 각각 1/2씩 부과됩니다. 화면의 “분기별(7·9월) 세액”은 이를 반영합니다.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q">③ 1세대 1주택 세율 특례는 언제 적용되나요?</div>
             <div class="faq-a">1세대의 보유 주택이 1채이고 공시가격이 9억원 이하인 경우 특례 세율을 적용합니다. 입력값을 바탕으로 경감액이 표시됩니다.</div>
           </div>
           <div class="faq-item">
-            <div class="faq-q">④ "세부담상한"이란?</div>
+            <div class="faq-q">④ 세부담상한?</div>
             <div class="faq-a">전년 세액 대비 인상 폭을 제한하는 장치입니다. 공시가격 구간에 따라 105%·110%·130% 상한을 적용, 과한 세부담을 완화하며, 본세와 도시지역분을 각각 비교한 후 초과액을 경감으로 계산합니다.</div>
           </div>
           <div class="faq-item">
-            <div class="faq-q">⑤ "지역자원시설세"란?</div>
+            <div class="faq-q">⑤ 지역자원시설세?</div>
             <div class="faq-a">소방세 또는 공동세라고도 불리는 지역자원시설세는 위 더보기를 눌러 해당 과세표준을 입력하면 자동 산출합니다. 다만 소액(연 4천 원/분기 2천 원 미만)은 부과되지 않아 “세액없음(소액)”으로 표시됩니다.</div>
           </div>
           <div class="faq-item">
@@ -396,16 +382,16 @@ tfoot th.big{font-size:15.2px}
             <div class="faq-a">도시지역분 과세 대상이면 기본값으로 포함됩니다. 해당이 없으면 스위치를 해제해 계산에서 제외할 수 있습니다.</div>
           </div>
           <div class="faq-item">
-            <div class="faq-q">⑧ "과표상한율"이란?</div>
-            <div class="faq-a">과표상한율을 전년에 비해 올해 과세표준금액이 많이 커지면 국민의 세금부담이 급히 늘어나는 부담을 덜어주고자 상한을 적용하여 연차별로 세금부담을 조금씩 늘리는 데 쓰입니다. 올해 과표상한율은 5% 입니다. 방법은 전년 공시가격과 올해 공시가격을 비교해 반영합니다(전년 금액 + 올해 공시가격의 5%와 올해 공시가격 중 작은 값 적용). 이에 따라 과세표준이 정해집니다.</div>
+            <div class="faq-q">⑧ 과표상한율?</div>
+            <div class="faq-a">전년에 비해 올해 과세표준액이 많이 커지면 국민의 세금이 단기간에 과하게 늘어나는 부담을 덜어주고자 상한을 적용하여 연차별로 세금부담을 조금씩 늘리는 데 쓰입니다. 올해 과표상한율은 5% 입니다. 방법은 전년 공시가격과 올해 공시가격을 비교해 반영합니다(전년 금액 + 올해 공시가격의 5%와 올해 공시가격 중 작은 값 적용). 이에 따라 과세표준이 정해집니다.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q">⑨ 전년도 금액을 모르면 어떻게 하나요?</div>
-            <div class="faq-a">전년 재산세액/도시지역분을 비워 두면 세부담상한 비교 없이 올해 기준으로 계산합니다. 실제 고지서는 전년 기록을 기준으로 달라질 수 있습니다.</div>
+            <div class="faq-a">전년 재산세액, 전년 도시지역분을 비워 두면 세부담상한 비교 없이 올해 기준으로 계산합니다. 실제 고지서는 전년 기록을 기준으로 달라질 수 있습니다.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q">⑩ 계산 결과가 고지서와 다를 수 있나요?</div>
-            <div class="faq-a">네. 개별 감면, 공동명의 지분, 과세기준일 변동, 10원단위 절사, 소수점 처리 등으로 차이가 날 수 있습니다. 최종 금액은 고지서를 확인해주세요.</div>
+            <div class="faq-a">네. 본 프로그램은 간이 계산툴로서 개별 감면, 공동명의 지분, 과세기준일 변동, 10원단위 절사, 소수점 처리 등으로 차이가 날 수 있습니다. 최종 금액은 고지서를 확인해주세요.</div>
           </div>
         </div>
       </details>
@@ -568,23 +554,6 @@ function openPrint(){
     window.print();
   }
 }
-
-/* 🔐 단순 PIN 로그인(프론트 전용): 120410 일치 시 안내 토스트 */
-function adminPinLogin(){
-  const pinEl=$('adminPin');
-  const pin=(pinEl?.value||'').trim();
-  if(!pin){ toast('PIN을 입력하세요.'); pinEl?.focus(); return; }
-  if(pin==='120410'){ toast('관리자 로그인 성공'); pinEl.value=''; pinEl.blur(); }
-  else{ toast('PIN이 올바르지 않습니다.'); pinEl.select(); }
-}
-
-/* Enter 키로 PIN 로그인 */
-document.addEventListener('keydown',(e)=>{
-  if(e.key==='Enter'){
-    const el=document.activeElement;
-    if(el && el.id==='adminPin'){ adminPinLogin(); }
-  }
-});
 </script>
 
 <!-- PWA: 서비스워커 등록 + 설치 버튼 (자동 업데이트 반영) -->
