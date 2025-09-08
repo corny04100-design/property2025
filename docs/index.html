@@ -27,9 +27,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
 .appbar{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(8px);background:color-mix(in oklab,var(--bg) 88%,#000 12%);border-bottom:1px solid var(--line)}
 .appbar .row{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
 .brand{display:none !important}
-/* 아이콘(왼쪽), PIN 영역(오른쪽 고정) */
+/* 왼쪽 액션 */
 .app-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto;min-width:0;margin-left:0;margin-right:auto;flex-wrap:wrap}
-.app-actions .spacer{display:none}
 .icon-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:#000;cursor:pointer;text-decoration:none;font-size:9.6px;font-weight:700;white-space:nowrap;flex:0 0 auto}
 .icon-btn:hover{filter:brightness(1.04)}
 .icon-btn.lg{font-size:9.6px;padding:6px 10px}
@@ -41,10 +40,13 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
 .ico-printer{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
 .ico-printer svg{width:100%;height:100%}
 .ico-printer .st{fill:none;stroke:var(--icon);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* Icon badge (optional) */
-.ico-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;border:1px solid var(--line);font-size:12px;line-height:1}
-.ico-badge.green{background:#eaf7ee;border-color:#cfe8d8}
-.ico-badge.red{background:#fdecec;border-color:#f4c6c6}
+
+/* 오른쪽 상단: 관리자 로그인 + PIN */
+.adminbar{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn-ghost-mini{display:inline-flex;align-items:center;gap:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;color:#6b7280;font-size:12px;font-weight:700;cursor:pointer}
+.btn-ghost-mini:hover{filter:brightness(0.98)}
+.pin-input{width:92px;height:28px;padding:2px 8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:inherit;text-align:center;font-size:12px;letter-spacing:2px}
+.pin-label{font-size:10px;color:#6b7280}
 
 /* Layout */
 .wrap{max-width:1100px;margin:20px auto 90px;padding:0 16px}
@@ -128,10 +130,7 @@ input::placeholder,textarea::placeholder{color:#9aa0a6}
 tfoot tr{background:var(--sum-bg);font-weight:900}
 tfoot th.big{font-size:15.2px}
 .sum-amount{font-size:14.4px !important;font-weight:900 !important;line-height:1.2}
-.sum-box{background:#ffffff;border:1px solid #cdd9ff;border-radius:12px;padding:14px 16px;margin:10px 0 12px 0;box-shadow:0 4px 10px rgba(44,88,255,.08);display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
-/* ▶ 합계 라벨 */
-.sum-box .label{font-size:13.6px;color:#000;white-space:nowrap;letter-spacing:-0.2px;line-height:1.2;font-weight:700}
-.sum-box .value{font-size:14.4px;font-weight:900}
+.sum-box{background:#ffffff;border:1px solid #cdd9ff;border-radius:12px;padding:14px 16px;margin:10px 0 12px 0;box-shadow:0 4px 12px rgba(44,88,255,.08);display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
 
 /* 경감세액 섹션 - compact 레이아웃 */
 .relief-section{margin-top:8px}
@@ -164,19 +163,13 @@ tfoot th.big{font-size:15.2px}
 .info-table td{white-space:normal;overflow:visible;text-overflow:clip}
 .micro{font-size:75%}
 .tiny{font-size:80%}
-.tips details{margin-top:12px}
-.tips summary{cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:normal}
-.tips .ico-info{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:999px;background:#eef3ff;border:1px solid #cdd9ff;color:#2c58ff;font-size:16px;font-weight:800;line-height:1}
-.tips .small-2{color:#2c58ff;font-size:80%}
-.sub-advice{display:inline-block;color:#d92d20;font-size:85%;margin-left:8px;white-space:nowrap}
 
-/* Tabbar & Toast */
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card);border-top:1px solid var(--line)}
-.tabbar .inner{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;gap:10px;justify-content:space-between}
-.tab-item{flex:1;text-align:center;padding:10px 6px;border-radius:12px;cursor:pointer;font-size:10.4px;color:var(--text-sub);user-select:none}
-.tab-item:hover{background:color-mix(in oklab,var(--brand-weak),#fff 30%)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:60;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
-.toast.show{opacity:1;pointer-events:auto}
+/* FAQ */
+.faq-card summary{cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:800}
+.faq-card .faq-list{margin-top:8px}
+.faq-card .faq-item{margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.faq-card .faq-q{font-weight:800;margin-bottom:6px}
+.faq-card .faq-a{color:#111}
 
 /* Print */
 @media print{
@@ -235,7 +228,6 @@ tfoot th.big{font-size:15.2px}
       <a class="icon-btn lg" target="_blank" href="https://www.law.go.kr/LSW/lsSc.do?query=%EC%A7%80%EB%B0%A9%EC%84%B8%EB%B2%95" rel="noopener">
         <span aria-hidden="true">🔍</span> 지방세법
       </a>
-      <!-- ✅ 위택스 버튼 (옅은 갈색 배경) -->
       <a class="icon-btn lg" target="_blank"
          href="https://www.wetax.go.kr/etq/etp/epi/E070101M01.do"
          rel="noopener" title="위택스 지방세 납부" aria-label="위택스">
@@ -243,6 +235,13 @@ tfoot th.big{font-size:15.2px}
       </a>
 
       <button id="install" type="button">앱 설치</button>
+    </div>
+
+    <!-- 🔐 우측 상단 관리자 로그인 + PIN -->
+    <div class="adminbar" aria-label="관리자 로그인 영역">
+      <button class="btn-ghost-mini" type="button" onclick="adminPinLogin()" title="관리자모드 로그인">관리자 로그인</button>
+      <label for="adminPin" class="pin-label">PIN</label>
+      <input id="adminPin" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="••••••" maxlength="6" />
     </div>
   </div>
 </header>
@@ -362,6 +361,56 @@ tfoot th.big{font-size:15.2px}
         </div>
       </div>
     </div>
+
+    <!-- 📌 FAQ (초기 비가시, 제목 클릭 시 펼침) -->
+    <div class="card faq-card" id="section-faq">
+      <details>
+        <summary>FAQ</summary>
+        <div class="faq-list">
+          <div class="faq-item">
+            <div class="faq-q">① 이 계산기는 어떤 주택에 적용되나요?</div>
+            <div class="faq-a">공동주택(아파트, 연립, 빌라, 다세대)에 한해 계산을 지원합니다. 단독주택·다가구주택은 별도 구조라 포함되지 않습니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">② 납부 시기와 금액 분할은 어떻게 되나요?</div>
+            <div class="faq-a">주택분 재산세는 통상 7월과 9월에 각각 1/2씩 부과·납부됩니다. 화면의 “분기별(7·9월) 세액”은 이를 반영합니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">③ 1세대 1주택 세율 특례는 언제 적용되나요?</div>
+            <div class="faq-a">보유 주택이 1채이고 공시가격이 9억 원 이하인 경우 특례 세율을 적용합니다. 입력값을 바탕으로 자동 판별되어 경감액이 표시됩니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">④ 세부담상한은 뭐에요?</div>
+            <div class="faq-a">전년 세액 대비 인상 폭을 제한하는 장치입니다. 공시가격 구간에 따라 105%·110%·130% 상한을 적용, 과한 세부담을 완화하며, 본세와 도시지역분을 각각 비교한 후 초과액을 경감으로 계산합니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">⑤ 지역자원시설세는 뭐에요?</div>
+            <div class="faq-a">소방세 또는 공동세라고도 불리는 지역자원시설세는 위 더보기를 눌러 해당 과세표준을 입력하면 자동 산출합니다. 다만 소액(연 4천 원/분기 2천 원 미만)은 부과되지 않아 “세액없음(소액)”으로 표시됩니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">⑥ 공정시장가액비율은 어떻게 적용되나요?</div>
+            <div class="faq-a">1주택은 공시가격 구간에 따라 43%·44%·45%를, 2주택이상부터는 60%를 적용합니다. 계산기에서 자동 선택합니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">⑦ 도시지역분 체크는 무엇인가요?</div>
+            <div class="faq-a">도시지역분 과세 대상이면 기본값으로 포함됩니다. 해당이 없으면 스위치를 해제해 계산에서 제외할 수 있습니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">⑧ 과표상한율은 뭐에요?</div>
+            <div class="faq-a">과표상한율을 전년에 비해 올해 과세표준금액이 많이 커지면 국민의 세금부담이 급히 늘어나는 부담을 덜어주고자 상한을 적용하여 연차별로 세금부담을 조금씩 늘리는 데 쓰입니다. 올해 과표상한율은 5% 입니다. 방법은 전년 공시가격과 올해 공시가격을 비교해 반영합니다(전년 금액 + 올해 공시가격의 5%와 올해 공시가격 중 작은 값 적용). 이에 따라 과세표준이 정해집니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">⑨ 전년도 금액을 모르면 어떻게 하나요?</div>
+            <div class="faq-a">전년 재산세액/도시지역분을 비워 두면 세부담상한 비교 없이 올해 기준으로 계산합니다. 실제 고지서는 전년 기록을 기준으로 달라질 수 있습니다.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">⑩ 계산 결과가 고지서와 다를 수 있나요?</div>
+            <div class="faq-a">네. 본 도구는 간이 계산툴로서 개별 감면, 공동명의 지분, 과세기준일 변동, 소수점 처리 등으로 차이가 날 수 있습니다. 최종 금액은 고지서를 확인해주세요.</div>
+          </div>
+        </div>
+      </details>
+    </div>
+    <!-- /FAQ -->
   </div>
 </div>
 
@@ -510,7 +559,7 @@ function calc(){
   setText('reliefCapY', fmt(reliefCap));
 }
 
-/* ✅ 인쇄/저장 버튼 함수(전역) */
+/* ✅ 인쇄 버튼 */
 function openPrint(){
   try{
     if(typeof calc==='function') calc();       // 최신 계산 반영
@@ -519,6 +568,23 @@ function openPrint(){
     window.print();
   }
 }
+
+/* 🔐 단순 PIN 로그인(프론트 전용): 120410 일치 시 안내 토스트 */
+function adminPinLogin(){
+  const pinEl=$('adminPin');
+  const pin=(pinEl?.value||'').trim();
+  if(!pin){ toast('PIN을 입력하세요.'); pinEl?.focus(); return; }
+  if(pin==='120410'){ toast('관리자 로그인 성공'); pinEl.value=''; pinEl.blur(); }
+  else{ toast('PIN이 올바르지 않습니다.'); pinEl.select(); }
+}
+
+/* Enter 키로 PIN 로그인 */
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Enter'){
+    const el=document.activeElement;
+    if(el && el.id==='adminPin'){ adminPinLogin(); }
+  }
+});
 </script>
 
 <!-- PWA: 서비스워커 등록 + 설치 버튼 (자동 업데이트 반영) -->
@@ -533,9 +599,7 @@ function openPrint(){
   // 서비스워커 등록
   navigator.serviceWorker.register('./service-worker.js').then((reg) => {
     // 이미 대기중인 새 SW가 있으면 즉시 활성화 요청
-    if (reg.waiting) {
-      reg.waiting.postMessage('SKIP_WAITING');
-    }
+    if (reg.waiting) { reg.waiting.postMessage('SKIP_WAITING'); }
 
     // 새 SW가 설치되면 즉시 활성화 요청
     reg.addEventListener('updatefound', () => {
