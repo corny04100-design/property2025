@@ -121,7 +121,7 @@ input::placeholder,textarea::placeholder{color:#9aa0a6}
 .table td.mono{font-weight:800;font-size:13.6px}
 .th-center{text-align:center !important}
 tfoot tr{background:var(--sum-bg);font-weight:900}
-tfoot th.big{font-size:15.2px}
+tfoot th.big{font-size:15.2px; text-align:center;} /* ⬅ 합계 세액 중앙 정렬 */
 .sum-amount{font-size:14.4px !important;font-weight:900 !important;line-height:1.2}
 .sum-box{background:#ffffff;border:1px solid #cdd9ff;border-radius:12px;padding:14px 16px;margin:10px 0 12px 0;box-shadow:0 4px 12px rgba(44,88,255,.08);display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
 
@@ -179,7 +179,8 @@ tfoot th.big{font-size:15.2px}
   .title{font-size:18pt;margin-bottom:6px}
   .subtitle{font-size:11pt;margin-bottom:8px}
   .actions,.btn,.btn-lookup,.appbar,.tabbar,.toast{display:none !important}
-  .tips-pay{display:none !important}
+  /* ⬇ 인쇄 시 FAQ 숨김 */
+  #section-faq{display:none !important;}
 }
 
 /* 버튼 배경 색상(주택공시가격=초록, 지방세법=빨강, 위택스=옅은 갈색) */
@@ -327,7 +328,7 @@ tfoot th.big{font-size:15.2px}
       <table class="table"><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup>
         <thead><tr><th class="th-center">세  목</th><th class="mono th-center">총세액</th><th class="mono">분기별(7·9월)세액</th></tr></thead>
         <tbody id="tb"><tr><td colspan="3" style="text-align:center;color:#555">입력 후 ‘계산하기’를 눌러주세요.</td></tr></tbody>
-        <tfoot><tr><th class="big">합계 세액</th><th class="mono sum-amount" id="sumY">-</th><th class="mono sum-amount" id="sumQ">-</th></tr></tfoot>
+        <tfoot><tr><th class="big th-center">합계 세액</th><th class="mono sum-amount" id="sumY">-</th><th class="mono sum-amount" id="sumQ">-</th></tr></tfoot>
       </table>
 
       <div class="relief-section" id="reliefSection">
@@ -348,51 +349,21 @@ tfoot th.big{font-size:15.2px}
       </div>
     </div>
 
-    <!-- 📌 FAQ (초기 비가시, 제목 클릭 시 펼침) -->
+    <!-- 📌 FAQ -->
     <div class="card faq-card" id="section-faq">
       <details>
         <summary>FAQ</summary>
         <div class="faq-list">
-          <div class="faq-item">
-            <div class="faq-q">① 이 계산기는 어떤 주택에 적용되나요?</div>
-            <div class="faq-a">공동주택(아파트, 연립, 빌라, 다세대)에 한해 계산을 지원합니다. 다가구주택·단독주택 계산불가.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">② 공동명의(지분)인 경우는 어떻게 세액 산출하나요?</div>
-            <div class="faq-a">각 소유자 지분에 비례해 과세표준을 안분하고, 감면·상한 등 요건을 개인별로 판단한 뒤 각각의 소유자에게 지분만큼만 개별 고지됩니다. 본 계산기는 단독소유 기준이며, 지분별 계산시 1세대 1주택 특례 요건 등은 달라질 수 있습니다. 최종 금액은 관할구청이 발송하는 고지서 또는 위택스에 전자납부번호로 조회 바랍니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">③ 1세대 1주택 세율 특례는 언제 적용되나요?</div>
-            <div class="faq-a">1세대의 보유 주택이 1채이고 공시가격이 9억원 이하인 경우 특례 세율을 적용합니다. 입력값을 바탕으로 경감액이 표시됩니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">④ 세부담상한?</div>
-            <div class="faq-a">전년 세액 대비 세액 인상의 폭을 제한하는 규정입니다. 공시가격 구간에 따라 105%·110%·130% 상한을 적용, 과한 세부담을 완화하며, 본세와 도시지역분을 각각 비교한 후 초과액을 경감액으로 표시됩니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">⑤ 지역자원시설세?</div>
-            <div class="faq-a">소방세 또는 공동세라고도 불리는 지역자원시설세는 위 더보기를 눌러 해당 과세표준을 입력하면 세액을 산출합니다. 단, 소액(연 4천 원/분기 2천 원 미만)은 부과되지 않아 “세액없음(소액)”으로 표시됩니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">⑥ 공정시장가액비율은 어떻게 적용되나요?</div>
-            <div class="faq-a">1주택은 공시가격 구간에 따라 43%·44%·45%를, 2주택이상부터는 60%를 적용합니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">⑦ 도시지역분 체크는 무엇인가요?</div>
-            <div class="faq-a">도시지역분 과세 대상이면 기본값으로 포함됩니다. 해당이 없으면 스위치를 해제하여 계산에서 제외할 수 있습니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">⑧ 과표상한율?</div>
-            <div class="faq-a">전년에 비해 올해 과세표준액이 많이 커지면 세액이 단기간에 과하게 늘어나는 부담을 덜어주고자 상한을 적용하여 연차별로 세액을 조금씩만 늘리는 데 쓰입니다. 올해 과표상한율은 5% 입니다. 방법은 전년 공시가격과 올해 공시가격을 비교해 반영합니다(전년 금액 + 올해 공시가격의 5%와 올해 공시가격 중 작은 값 적용) 이에 따라 과세표준이 정해집니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">⑨ 전년도 금액을 모르면 어떻게 하나요?</div>
-            <div class="faq-a">전년 재산세액, 전년 도시지역분을 비워 두면 세부담상한 비교 없이 올해 산출기준으로 계산합니다. 실제 고지서는 전년 세액을 기준으로 달라질 수 있습니다.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">⑩ 계산 결과가 고지서와 다를 수 있나요?</div>
-            <div class="faq-a">네. 본 계산 결과는 감면, 공동명의 지분, 과세기준일 변동, 원단위 절사, 소수점 처리 등으로 차이가 날 수 있습니다. 최종 금액은 관할구청이 발송한 고지서를 확인해주세요(9월15일 이후).</div>
-          </div>
+          <div class="faq-item"><div class="faq-q">① 이 계산기는 어떤 주택에 적용되나요?</div><div class="faq-a">공동주택(아파트, 연립, 빌라, 다세대)에 한해 계산을 지원합니다. 단독주택·다가구주택은 별도 구조라 포함되지 않습니다.</div></div>
+          <div class="faq-item"><div class="faq-q">② 공동명의(지분)인 경우는 어떻게 계산하나요?</div><div class="faq-a">실제 과세는 각 소유자 지분에 비례해 과세표준을 안분하고, 감면·상한 등 요건을 개인별로 판단한 뒤 합산 고지됩니다. 본 계산기는 단일 소유 기준 간이 도구입니다.</div></div>
+          <div class="faq-item"><div class="faq-q">③ 1세대 1주택 세율 특례는 언제 적용되나요?</div><div class="faq-a">보유 주택이 1채이고 공시가격이 9억 원 이하인 경우 특례 세율을 적용합니다. 입력값을 바탕으로 자동 판별되어 경감액이 표시됩니다.</div></div>
+          <div class="faq-item"><div class="faq-q">④ 세부담상한은 뭐에요?</div><div class="faq-a">전년 세액 대비 인상 폭을 제한하는 장치입니다. 공시가격 구간에 따라 105%·110%·130% 상한을 적용, 과한 세부담을 완화하며, 본세와 도시지역분을 각각 비교한 후 초과액을 경감으로 계산합니다.</div></div>
+          <div class="faq-item"><div class="faq-q">⑤ 지역자원시설세는 뭐에요?</div><div class="faq-a">소방세 또는 공동세라고도 불리는 지역자원시설세는 위 더보기를 눌러 해당 과세표준을 입력하면 자동 산출합니다. 소액(연 4천 원/분기 2천 원 미만)은 “세액없음(소액)”으로 표시됩니다.</div></div>
+          <div class="faq-item"><div class="faq-q">⑥ 공정시장가액비율은 어떻게 적용되나요?</div><div class="faq-a">1주택은 공시가격 구간에 따라 43%·44%·45%를, 2주택 이상부터는 60%를 적용합니다. 계산기에서 자동 선택합니다.</div></div>
+          <div class="faq-item"><div class="faq-q">⑦ 도시지역분 체크는 무엇인가요?</div><div class="faq-a">도시지역분 과세 대상이면 기본값으로 포함됩니다. 해당이 없으면 스위치를 해제해 계산에서 제외할 수 있습니다.</div></div>
+          <div class="faq-item"><div class="faq-q">⑧ 과표상한율은 뭐에요?</div><div class="faq-a">과표상한율은 전년에 비해 올해 과세표준금액이 많이 커지면 국민의 세금부담이 급히 늘어나는 부담을 덜어주고자 상한을 적용하여 연차별로 세금부담을 조금씩 늘리는 데 쓰입니다. 올해 과표상한율은 5% 입니다. 전년 공시가격과 올해 공시가격을 비교해 (전년 금액 + 올해 공시가격의 5%)와 올해 공시가격 중 작은 값을 적용해 과세표준을 정합니다.</div></div>
+          <div class="faq-item"><div class="faq-q">⑨ 전년도 금액을 모르면 어떻게 하나요?</div><div class="faq-a">전년 재산세액/도시지역분을 비워 두면 세부담상한 비교 없이 올해 기준으로 계산합니다. 실제 고지서는 전년 기록을 기준으로 달라질 수 있습니다.</div></div>
+          <div class="faq-item"><div class="faq-q">⑩ 계산 결과가 고지서와 다를 수 있나요?</div><div class="faq-a">네. 본 도구는 간이 계산툴로서 개별 감면, 공동명의 지분, 과세기준일 변동, 소수점 처리 등으로 차이가 날 수 있습니다. 최종 금액은 고지서를 확인해주세요.</div></div>
         </div>
       </details>
     </div>
@@ -408,10 +379,15 @@ const $=id=>document.getElementById(id);
 const setText=(id,v)=>{const el=$(id); if(el) el.textContent=v;}
 const setHTML=(id,v)=>{const el=$(id); if(el) el.innerHTML=v;}
 const numOf=id=>Number((($(id)?.value)||'0').replace(/,/g,'')||0);
+
+/* 🔟 십원 절사 도우미 */
 const floor10=n=>Math.floor(n/10)*10;
-const fmt=n=>(Number.isFinite(n)?floor10(n).toLocaleString('ko-KR')+'원':'-');
+
+/* 표시: 절사 없이(원 단위) */
+const fmt=n=>(Number.isFinite(n)?Math.floor(n).toLocaleString('ko-KR')+'원':'-');
 const fmtPct=p=>{const v=Math.round(p*10000)/100;return(Math.abs(v-Math.round(v))<1e-9)?(Math.round(v)+'%'):(v+'%');};
 const fmtPctInt=r=> (Math.round(r*100))+'%';
+
 function toast(msg){const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); clearTimeout(toast._timer); toast._timer=setTimeout(()=>t.classList.remove('show'),1500);}
 
 function openLookupNew(){window.open('https://www.realtyprice.kr/notice/town/nfSiteLink.htm','_blank','noopener');}
@@ -443,7 +419,14 @@ const RATE_TABLES={
 const SIMPLE_THRESHOLD=60000000;
 const SIMPLE_RATE={general:0.0010,special:0.0005};
 const CITY_RATE=0.0014, EDU_RATE=0.20;
-const ZR_TABLE=[{base:0,rate:0.0004,minus:0},{base:6000000,rate:0.0005,minus:600},{base:13000000,rate:0.0006,minus:1900},{base:26000000,rate:0.0008,minus:7100},{base:39000000,rate:0.0010,minus:14900},{base:64000000,rate:0.0012,minus:27700}];
+const ZR_TABLE=[
+  {base:0,rate:0.0004,minus:0},
+  {base:6000000,rate:0.0005,minus:600},
+  {base:13000000,rate:0.0006,minus:1900},
+  {base:26000000,rate:0.0008,minus:7100},
+  {base:39000000,rate:0.0010,minus:14900},
+  {base:64000000,rate:0.0012,minus:27700}
+];
 const USING_LABEL={general:'일반세율',special:'1주택 특례세율'};
 
 const appliedPublicPrice=(curP,prevP)=>Math.min(prevP+curP*0.05,curP);
@@ -488,8 +471,8 @@ function calc(){
   const base=Math.floor(applied*csmar);
 
   const usingKey=chooseUsingKey(curP,homes);
-  const basic0=computeBasicTax(base,usingKey);
-  const city0=urban?computeCity(base):{y:0,q:0};
+  const basic0=computeBasicTax(base,usingKey);     // 본세
+  const city0=urban?computeCity(base):{y:0,q:0};  // 도시지역분
 
   const burdenCap=getBurdenCapRate(curP);
 
@@ -499,53 +482,69 @@ function calc(){
   const capBon = (priorBon>0) ? Math.floor(priorBon * burdenCap) : Infinity;
   const capCity= (priorCity>0) ? Math.floor(priorCity * burdenCap) : Infinity;
 
+  // 상한 적용된 본세/도시지역분 (원단위)
   let y_bon = Math.min(basic0.y, capBon);
   if (!Number.isFinite(capBon)) y_bon = basic0.y;
   let q_bon = Math.floor(y_bon/2);
-
-  const edu = computeEdu(y_bon);
 
   let y_city = Math.min(city0.y, capCity);
   if (!Number.isFinite(capCity)) y_city = city0.y;
   let q_city = Math.floor(y_city/2);
 
-  const zr=computeZR(numOf('자원_과표'));
+  // 교육세 / 자원세
+  const edu = computeEdu(y_bon);                 // 원단위
+  const zr  = computeZR(numOf('자원_과표'));     // 원단위(+라벨)
 
-  const generalBasic = computeBasicTax(base,'general').y;
-  const specialBasic = computeBasicTax(base,'special').y;
-  const isSpecial = (homes===1) && (curP<=900_000_000);
-  const reliefSpecial = isSpecial ? Math.max(0, generalBasic - specialBasic) : 0;
+  // ✅ 교육세/자원세: 표기 및 합계 모두 십원단위 절사 반영
+  const eduY10 = floor10(edu.y), eduQ10 = floor10(edu.q);
+  const zrY10  = floor10(zr.addY), zrQ10  = floor10(zr.addQ);
 
-  const diffBon = Math.max(0, basic0.y - y_bon);
-  const diffCity = Math.max(0, city0.y - y_city);
-  const reliefCap = diffBon + diffCity;
+  // ✅ 연간 합계: (본세+도시) 먼저 십원 절사 + (교육세10) + (자원세10)
+  const subtotalY10 = floor10(y_bon + y_city);
+  const y_sum = subtotalY10 + eduY10 + zrY10;
 
-  const reliefTotal = floor10(reliefSpecial) + floor10(reliefCap);
+  // ✅ 분기 합계: (본세+도시) 십원 절사 + (교육세10) + (자원세10)
+  const subtotalQ10 = floor10(q_bon + q_city);
+  const q_sum = subtotalQ10 + eduQ10 + zrQ10;
 
-  const y_bon_d=floor10(y_bon), y_city_d=floor10(y_city), edu_y_d=floor10(edu.y), zr_y_d=floor10(zr.addY);
-  const q_bon_d=floor10(q_bon), q_city_d=floor10(q_city), edu_q_d=floor10(edu.q), zr_q_d=floor10(zr.addQ);
-  const y_sum=y_bon_d + y_city_d + edu_y_d + zr_y_d;
-  const q_sum=q_bon_d + q_city_d + edu_q_d + zr_q_d;
+  // 표 렌더링(교육/자원은 십원 절사값 노출)
+  const dispZrY = (zr.addY===0 ? zr.displayY : fmt(zrY10));
+  const dispZrQ = (zr.addQ===0 ? zr.displayQ : fmt(zrQ10));
 
   const rows=[
     ['재산세(본세)',fmt(y_bon),fmt(q_bon)],
-    ['도시지역분',fmt(y_city),fmt(q_city)],
-    ['지방교육세',fmt(edu.y),fmt(edu.q)],
-    ['지역자원시설세',zr.displayY,zr.displayQ],
+    ['도시지역분',   fmt(y_city),fmt(q_city)],
+    ['지방교육세',   fmt(eduY10),fmt(eduQ10)],
+    ['지역자원시설세',dispZrY,    dispZrQ],
   ].map(([n,y,q])=>`<tr><td class="th-center">${n}</td><td class="mono">${y}</td><td class="mono">${q}</td></tr>`).join('');
   setHTML('tb',rows);
 
+  // 합계(상단 요약 + 표 풋터)
   setText('sumY',fmt(y_sum)); setText('sumQ',fmt(q_sum));
   setText('sumY_top',fmt(y_sum)); setText('sumQ_top',fmt(q_sum));
 
-  updateBreakdown(applied,base,basic0.labelMain,csmar,burdenCap);
+  updateBreakdown(applied,base,basic0.labelMain,getCsmar(applied,homes),burdenCap);
 
-  setText('reliefTotal', fmt(reliefTotal));
-  setText('reliefSpecialY', fmt(reliefSpecial));
-  setText('reliefCapY', fmt(reliefCap));
+  // ✅ 경감 금액도 십원단위 절사 후 표시/합산
+  const generalBasic = computeBasicTax(base,'general').y;
+  const specialBasic = computeBasicTax(base,'special').y;
+  const isSpecial = (homes===1) && (curP<=900_000_000);
+  const reliefSpecialRaw = isSpecial ? Math.max(0, generalBasic - specialBasic) : 0;
+
+  const diffBon = Math.max(0, basic0.y - y_bon);
+  const diffCity = Math.max(0, city0.y - y_city);
+  const reliefCapRaw = diffBon + diffCity;
+
+  const reliefSpecial10 = floor10(reliefSpecialRaw);
+  const reliefCap10 = floor10(reliefCapRaw);
+  const reliefTotal = reliefSpecial10 + reliefCap10;
+
+  setText('reliefTotal',   fmt(reliefTotal));
+  setText('reliefSpecialY',fmt(reliefSpecial10));
+  setText('reliefCapY',    fmt(reliefCap10));
 }
 
-/* ✅ 인쇄 버튼 */
+/* ✅ 인쇄 버튼 (FAQ는 인쇄시 숨김: CSS @media print로 처리) */
 function openPrint(){
   try{
     if(typeof calc==='function') calc();       // 최신 계산 반영
