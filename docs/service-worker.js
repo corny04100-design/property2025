@@ -1,13 +1,13 @@
 // PWA 캐시 서비스워커 (매니페스트는 프리캐시에서 제외)
 // 다음 릴리스마다 CACHE_VERSION만 올리면 됩니다.
-const CACHE_VERSION = 'pwa-cache-v8';
-const RUNTIME_CACHE = 'runtime-v8';
+const CACHE_VERSION = 'pwa-cache-v9';
+const RUNTIME_CACHE = 'runtime-v9';
 
 const PRECACHE_URLS = [
   './',
   './index.html',
-  './icon-192-v3.png',
-  './icon-512-v3.png',
+  './icon-192-v5.png',
+  './icon-512-v5.png',
 ];
 
 // 설치: 핵심 파일 프리캐시
