@@ -158,11 +158,12 @@ tfoot th.big{font-size:15.2px; text-align:center;} /* ⬅ 합계 세액 중앙 �
 .tiny{font-size:80%}
 
 /* FAQ */
-.faq-card summary{cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:800}
-.faq-card .faq-list{margin-top:8px}
-.faq-card .faq-item{margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
-.faq-card .faq-q{font-weight:800;margin-bottom:6px}
-.faq-card .faq-a{color:#111}
+.faq-card{ text-align:center; }
+.faq-card summary{cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:800;justify-content:center; text-align:center;}
+.faq-card .faq-list{margin-top:8px; display:flex; flex-direction:column; align-items:center; gap:8px;}
+.faq-card .faq-item{margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff; text-align:center; width:100%; max-width:780px;}
+.faq-card .faq-q{font-weight:800;margin-bottom:6px; text-align:center;}
+.faq-card .faq-a{color:#111; text-align:center;}
 
 /* Print */
 @media print{
