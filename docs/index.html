@@ -321,12 +321,18 @@ tfoot th.big{font-size:15.2px; text-align:center;} /* ⬅ 합계 세액 중앙 �
         </div>
       </div>
 
-      <div class="actions" style="margin-top:10px">
-        <div class="left">
-          <button class="btn btn-calc" onclick="calc()"><span class="ico-reg" aria-hidden="true">✍️</span> 계산하기</button>
-        </div>
-        <div class="right" style="display:none"></div>
-      </div>
+<div class="actions" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+  <div class="left" style="flex:0 0 auto;">
+    <button class="btn btn-calc" onclick="calc()">
+      <span class="ico-reg" aria-hidden="true">✍️</span> 계산하기
+    </button>
+  </div>
+  <!-- 합계 세액 박스 추가 -->
+  <div class="quick-sum" id="calc1_quick_sum" style="display:none; flex:0 0 auto;">
+    <span class="label">총 합계 세액</span>
+    <span class="value" id="calc1_quick_value">-</span>
+  </div>
+</div>
 
       <div style="margin-top:10px" class="swap-breakdown">
         <details open>
