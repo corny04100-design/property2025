@@ -525,11 +525,16 @@ function updateBreakdown(appliedPublic,base,labelMain,csmar,burdenCap){
 }
 
 function calc(){
-  const curP=numOf('공시_현'), prevP=numOf('공시_전');
+    const curP=numOf('공시_현'), prevP=numOf('공시_전');
   const homes=Number((($('주택수')?.value)||'1').replace(/,/g,''))||1;
   const urban=$('도시과세')?.checked ?? true;
 
-  const applied=appliedPublicPrice(curP,prevP);
+  // ✅ 전년도 값이 비어 있고 2025 공시가격만 입력된 경우: 5% 과표상한 미적용
+  //    → 과세표준 = (2025 공시가격) × (공정시장가액비율)
+  const hasCur = curP > 0;
+  const hasPrev = prevP > 0;
+  const applied = (hasCur && !hasPrev) ? curP : appliedPublicPrice(curP, prevP);
+
   const csmar=getCsmar(applied,homes);
   const base=Math.floor(applied*csmar);
 
