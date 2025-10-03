@@ -31,16 +31,18 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
   backdrop-filter:saturate(140%) blur(8px);
   background:color-mix(in oklab,var(--bg) 88%,#000 12%);
   border-bottom:1px solid var(--line);
+  overflow:visible;              /* 🔧 레이어 표시 안전장치 */
 }
 
-/* 상단 빨간 가로줄 복원 */
+/* 상단 빨간 가로줄 */
 .appbar::before{
   content:"";
   position:absolute;
   top:0; left:0; right:0;
-  height:4px;            /* 줄 두께 (원하면 2~6px 조정) */
-  background:#b71c1c;    /* 빨간색 */
+  height:4px;
+  background:#b71c1c;
   pointer-events:none;
+  z-index:1;                     /* ✅ 내용 위로 올림 */
 }
 
 .appbar .row{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
