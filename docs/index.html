@@ -31,7 +31,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
   backdrop-filter:saturate(140%) blur(8px);
   background:color-mix(in oklab,var(--bg) 88%,#000 12%);
   border-bottom:1px solid var(--line);
-  overflow:visible;              /* 🔧 레이어 표시 안전장치 */
+  overflow:visible;
 }
 
 /* 상단 빨간 가로줄 */
@@ -42,7 +42,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;ba
   height:4px;
   background:#b71c1c;
   pointer-events:none;
-  z-index:1;                     /* ✅ 내용 위로 올림 */
+  z-index:1000; /* 줄이 컨텐츠보다 위에 보이도록 */
 }
 
 .appbar .row{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
@@ -108,6 +108,27 @@ input::placeholder,textarea::placeholder{color:#9aa0a6}
   width:70% !important;
   display:block;
   margin:0 auto;
+}
+
+/* 계산하기 우측 '합계세액' 퀵 박스 */
+.quick-sum{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border:1px solid #cdd9ff;
+  background:#ffffff;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(44,88,255,.08);
+  font-weight:800;
+}
+.quick-sum .label{
+  font-size:12px;
+  color:var(--text-sub);
+}
+.quick-sum .value{
+  font-size:14.4px;
+  color:#000;
 }
 
 /* Buttons & Switch */
@@ -323,18 +344,18 @@ tfoot th.big{font-size:15.2px; text-align:center;} /* ⬅ 합계 세액 중앙 �
         </div>
       </div>
 
-<div class="actions" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-  <div class="left" style="flex:0 0 auto;">
-    <button class="btn btn-calc" onclick="calc()">
-      <span class="ico-reg" aria-hidden="true">✍️</span> 계산하기
-    </button>
-  </div>
-  <!-- 합계 세액 박스 추가 -->
-  <div class="quick-sum" id="calc1_quick_sum" style="display:none; flex:0 0 auto;">
-    <span class="label">총 합계 세액</span>
-    <span class="value" id="calc1_quick_value">-</span>
-  </div>
-</div>
+      <div class="actions" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div class="left" style="flex:0 0 auto;">
+          <button class="btn btn-calc" onclick="calc()">
+            <span class="ico-reg" aria-hidden="true">✍️</span> 계산하기
+          </button>
+        </div>
+        <!-- 합계 세액 박스 -->
+        <div class="quick-sum" id="calc1_quick_sum" aria-live="polite" style="display:none; flex:0 0 auto;">
+          <span class="label">합계세액</span>
+          <span class="value" id="calc1_quick_value">-</span>
+        </div>
+      </div>
 
       <div style="margin-top:10px" class="swap-breakdown">
         <details open>
@@ -564,6 +585,13 @@ function calc(){
   // 합계(상단 요약 + 표 풋터)
   setText('sumY',fmt(y_sum)); setText('sumQ',fmt(q_sum));
   setText('sumY_top',fmt(y_sum)); setText('sumQ_top',fmt(q_sum));
+
+  // ▶ 계산하기 우측 퀵 합계 박스 업데이트/표시
+  const quickBox=$('calc1_quick_sum');
+  if(quickBox){
+    quickBox.style.display='inline-flex';
+    setText('calc1_quick_value', fmt(y_sum));
+  }
 
   updateBreakdown(applied,base,basic0.labelMain,getCsmar(applied,homes),burdenCap);
 
