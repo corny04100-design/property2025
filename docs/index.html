@@ -1,3 +1,7 @@
+좋아요! 인덱스 파일에 그대로 붙여넣으면 됩니다.
+(추가한 부분은 `/* ▼ 상단 3개 입력박스 70% */` 주석으로 표시했어요.)
+
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -80,6 +84,15 @@ input::placeholder,textarea::placeholder{color:#9aa0a6}
 .row3.equal3 label{text-align:center}
 .row3.equal3 input.num{width:100%;height:44px}
 .row3.equal3 .w-105{width:100% !important}
+
+/* ▼ 상단 3개 입력박스 70% (가운데 정렬) */
+.row3.equal3 input#공시_현,
+.row3.equal3 input#공시_전,
+.row3.equal3 input#주택수{
+  width:70% !important;
+  display:block;
+  margin:0 auto;
+}
 
 /* Buttons & Switch */
 .switch{display:inline-flex;align-items:center;gap:8px;margin:0}
@@ -616,4 +629,4 @@ function openPrint(){
 </script>
 </body>
 </html>
-.
+`
