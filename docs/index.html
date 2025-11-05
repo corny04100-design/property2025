@@ -635,91 +635,85 @@ function openPrint(){
     window.print();
   }
 }
-</script>
-
-<!-- PWA: 서비스워커 등록 + 설치 버튼 (자동 업데이트 반영) -->
-<script>
-<!-- ✅ 수정 후: (iOS에서도 버튼 항상 노출 + 안내 문구 띄우기) -->
+<script>  
+<!-- ✅ 수정 후: (교체해서 넣을 최종 하단 PWA 스크립트) -->
 <script>
 (function(){
-  const btn = document.getElementById('install');
-
-  // 1) 버튼 표시 정책: 설치되어 있지 않으면 항상 보임
-  function setInstallButtonVisibility() {
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      window.navigator.standalone === true;
-    if (btn) btn.style.display = isStandalone ? 'none' : 'inline-block';
+  // 안내 도우미(토스트 우선, 없으면 alert)
+  function notify(msg){
+    if (typeof window.toast === 'function') window.toast(msg);
+    else alert(msg);
   }
-  setInstallButtonVisibility();
 
-  // 2) 서비스워커 등록 및 즉시 업데이트 반영
+  const btn = document.getElementById('install');
+  const isStandalone = () =>
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // 1) 버튼 표시: 설치 상태 아니면 항상 보임
+  function setBtn(){
+    if (!btn) return;
+    btn.style.display = isStandalone() ? 'none' : 'inline-block';
+  }
+  setBtn();
+
+  // 2) SW 등록 + 즉시 업데이트 반영
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').then((reg) => {
+    navigator.serviceWorker.register('./service-worker.js').then((reg)=>{
       if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
-      reg.addEventListener('updatefound', () => {
+      reg.addEventListener('updatefound', ()=>{
         const sw = reg.installing;
         if (!sw) return;
-        sw.addEventListener('statechange', () => {
+        sw.addEventListener('statechange', ()=>{
           if (sw.state === 'installed' && navigator.serviceWorker.controller) {
             sw.postMessage('SKIP_WAITING');
           }
         });
       });
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return; refreshing = true; location.reload();
+      let refreshing=false;
+      navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+        if (refreshing) return; refreshing=true; location.reload();
       });
     }).catch(console.warn);
   } else {
-    if (btn) btn.style.display = 'none';
-    return;
+    if (btn) btn.style.display='none';
   }
 
-  // 3) 설치 프롬프트(안드/데스크톱 크롬 계열)
-  let deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', (e) => {
+  // 3) A2HS 이벤트(크롬/안드)
+  let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault();
-    deferredPrompt = e;
-    setInstallButtonVisibility();
+    deferredPrompt=e;
+    setBtn();
   });
+  window.addEventListener('appinstalled', ()=>{ if (btn) btn.style.display='none'; });
 
-  // 4) 설치됨 이벤트 → 버튼 숨김
-  window.addEventListener('appinstalled', () => {
-    if (btn) btn.style.display = 'none';
-  });
-
-  // 5) 버튼 클릭 시 동작
+  // 4) 클릭 동작
   if (btn) {
-    btn.addEventListener('click', async () => {
-      const isStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true;
-      if (isStandalone) return;
+    btn.addEventListener('click', async ()=>{
+      if (isStandalone()) return;
 
-      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-
-      if (deferredPrompt && !isIos) {
-        // 크롬 등: 네이티브 설치 프롬프트
-        try {
-          btn.disabled = true;
+      if (deferredPrompt && !isIOS) {
+        try{
+          btn.disabled=true;
           deferredPrompt.prompt();
           await deferredPrompt.userChoice;
-        } finally {
-          deferredPrompt = null;
-          btn.disabled = false;
+        } catch(e){ console.warn(e); }
+        finally{
+          deferredPrompt=null;
+          btn.disabled=false;
         }
         return;
       }
-
-      // ✅ iOS 사파리 등: 안내 문구 표시
-      alert('iOS 사파리: 공유(⬆️) 버튼 → "홈 화면에 추가"를 눌러 설치하세요.');
+      // iOS 등: 안내 문구
+      notify('iOS 사파리: 공유(⬆️) 버튼 → "홈 화면에 추가"를 눌러 설치하세요.');
     });
   }
 
-  // 6) display-mode 변화 시 버튼 상태 갱신
+  // 5) display-mode 변화 시 버튼 상태 갱신
   const mq = window.matchMedia('(display-mode: standalone)');
-  if (mq && mq.addEventListener) mq.addEventListener('change', setInstallButtonVisibility);
+  if (mq && mq.addEventListener) mq.addEventListener('change', setBtn);
 })();
 </script>
 </body>
