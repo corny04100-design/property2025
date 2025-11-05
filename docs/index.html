@@ -639,54 +639,87 @@ function openPrint(){
 
 <!-- PWA: 서비스워커 등록 + 설치 버튼 (자동 업데이트 반영) -->
 <script>
+<!-- ✅ 수정 후: (iOS에서도 버튼 항상 노출 + 안내 문구 띄우기) -->
+<script>
 (function(){
-  if (!('serviceWorker' in navigator)) {
-    const btn = document.getElementById('install');
+  const btn = document.getElementById('install');
+
+  // 1) 버튼 표시 정책: 설치되어 있지 않으면 항상 보임
+  function setInstallButtonVisibility() {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+    if (btn) btn.style.display = isStandalone ? 'none' : 'inline-block';
+  }
+  setInstallButtonVisibility();
+
+  // 2) 서비스워커 등록 및 즉시 업데이트 반영
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').then((reg) => {
+      if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+      reg.addEventListener('updatefound', () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener('statechange', () => {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            sw.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return; refreshing = true; location.reload();
+      });
+    }).catch(console.warn);
+  } else {
     if (btn) btn.style.display = 'none';
     return;
   }
 
-  // 서비스워커 등록
-  navigator.serviceWorker.register('./service-worker.js').then((reg) => {
-    // 이미 대기중인 새 SW가 있으면 즉시 활성화 요청
-    if (reg.waiting) { reg.waiting.postMessage('SKIP_WAITING'); }
-
-    // 새 SW가 설치되면 즉시 활성화 요청
-    reg.addEventListener('updatefound', () => {
-      const sw = reg.installing;
-      if (!sw) return;
-      sw.addEventListener('statechange', () => {
-        if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-          sw.postMessage('SKIP_WAITING');
-        }
-      });
-    });
-
-    // 컨트롤러 변경되면 자동 새로고침(새 SW 즉시 반영)
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (refreshing) return;
-      refreshing = true;
-      window.location.reload();
-    });
-  }).catch(console.error);
-
-  // 앱 설치 버튼 로직
-  let deferredPrompt;
-  const btn = document.getElementById('install');
+  // 3) 설치 프롬프트(안드/데스크톱 크롬 계열)
+  let deferredPrompt = null;
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e; if (btn) btn.style.display = 'inline-block';
+    e.preventDefault();
+    deferredPrompt = e;
+    setInstallButtonVisibility();
   });
+
+  // 4) 설치됨 이벤트 → 버튼 숨김
+  window.addEventListener('appinstalled', () => {
+    if (btn) btn.style.display = 'none';
+  });
+
+  // 5) 버튼 클릭 시 동작
   if (btn) {
     btn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      btn.disabled = true; deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null; btn.style.display = 'none';
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+      if (isStandalone) return;
+
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+      if (deferredPrompt && !isIos) {
+        // 크롬 등: 네이티브 설치 프롬프트
+        try {
+          btn.disabled = true;
+          deferredPrompt.prompt();
+          await deferredPrompt.userChoice;
+        } finally {
+          deferredPrompt = null;
+          btn.disabled = false;
+        }
+        return;
+      }
+
+      // ✅ iOS 사파리 등: 안내 문구 표시
+      alert('iOS 사파리: 공유(⬆️) 버튼 → "홈 화면에 추가"를 눌러 설치하세요.');
     });
   }
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  if (isStandalone && btn) btn.style.display = 'none';
+
+  // 6) display-mode 변화 시 버튼 상태 갱신
+  const mq = window.matchMedia('(display-mode: standalone)');
+  if (mq && mq.addEventListener) mq.addEventListener('change', setInstallButtonVisibility);
 })();
 </script>
 </body>
