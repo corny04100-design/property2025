@@ -248,6 +248,27 @@ tfoot th.big{font-size:15.2px; text-align:center;} /* ⬅ 합계 세액 중앙 �
 .app-actions a[onclick^="openLookupNew"]:hover,
 .app-actions a[href*="law.go.kr"]:hover,
 .app-actions a[href*="wetax.go.kr"]:hover{filter:brightness(1.03);} 
+
+/* ✅ 토스트 스타일 추가 */
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    background:#333;
+    color:#fff;
+    padding:10px 14px;
+    border-radius:8px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s, transform .25s;
+    z-index:2147483647;
+    font-size:13px;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(-6px);
+  }
 </style>
 </head>
 <body>
@@ -641,9 +662,13 @@ function openPrint(){
 (function(){
   // 안내 도우미(토스트 우선, 없으면 alert)
   function notify(msg){
-    if (typeof window.toast === 'function') window.toast(msg);
-    else alert(msg);
-  }
+  const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // iOS 사파리에서는 확실히 보이도록 alert 강제
+  if (isiOS) { alert(msg); return; }
+
+  if (typeof window.toast === 'function') window.toast(msg);
+  else alert(msg);
+}
 
   const btn = document.getElementById('install');
   const isStandalone = () =>
